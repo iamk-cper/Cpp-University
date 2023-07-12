@@ -1,0 +1,263 @@
+//Kacper Mycka
+#include <string>
+using namespace std;
+
+string NormalizujNapis(string sentence) {
+    string result;
+    for (int place = 0; place < sentence.size(); place++) {
+        if (sentence[place] == ' ') {
+            while (sentence[place] == ' ') {
+                place++;
+            }
+            if (sentence[place] != '.' && sentence[place] != ',' && sentence[place] != 0) {
+                result += ' ';
+                if (result == " ") {
+                    result = sentence[place];
+                }
+                else {
+                    result += sentence[place];
+                }
+            }
+            else if (sentence[place] == '.' || sentence[place] == ',') {
+                if (sentence[place + 1] != 0) {
+                    result += sentence[place];
+                    result += ' ';
+                }
+                else {
+                    result += sentence[place];
+                }
+            }
+        }
+        else if (sentence[place] == '.' || sentence[place] == ',') {
+            if (sentence[place + 1] != 0) {
+                result += sentence[place];
+                result += ' ';
+            }
+            else {
+                result += sentence[place];
+            }
+        }
+        else {
+            result += sentence[place];
+        }
+    }
+    return result;
+}
+string UsunSlowo(string sentence, int num) {
+    int counter = num;
+    int del = 0;
+    string result;
+    if (counter == 1) {
+        del = 1;
+    }
+    if (del == 1) {
+        for (int place = 0; place < sentence.size(); place++) {
+            if (sentence[place] == ' ' && del == 1) {
+                result += sentence[place];
+            }
+            else if (sentence[place] != ' ' && del == 1) {
+                del = 2;
+                while (sentence[place + 1] != ' ' && sentence[place + 1] != 0) {
+                    place++;
+                }
+            }
+            else if (sentence[place] == ' ') {
+                del = 0;
+                result += sentence[place];
+            }
+            else {
+                result += sentence[place];
+            }
+        }
+    }
+    else {
+        for (int place = 0; place < sentence.size(); place++) {
+            if (del == 0) {
+                if (sentence[place] == ' ') {
+                    if (place == 0) {
+                        while (sentence[place+1] == ' ') {
+                            place++;
+                            result += sentence[place];
+                        }
+                        counter++;
+                    }
+                    if (sentence[place+1] != ' ') {
+                        counter--;
+                    }
+                    if (counter == 1) {
+                        del = 1;
+                        /*while (sentence[place] == ' ') {
+                            result += sentence[place];
+                            place++;
+                        }*/
+                    }
+                    result += sentence[place];
+                    //dodajemy do resulta teraz
+                }
+                else {
+                    result += sentence[place];
+                    // dodajemy
+                }
+                //cout << result << " " << counter << endl;
+            }
+            else if (sentence[place] == ' ' && del == 1) {
+                counter--;
+                del = 0;
+                result += sentence[place];
+                //dodajemy do resulta
+            }
+        }
+    }
+    return result;
+}
+string NajwiekszeSlowo(string sentence) {
+    string result, word;
+    int shift, loc = 0;
+    int wordint, resultint;
+    string base = NormalizujNapis(sentence);
+    for (int place = 0; place < base.size(); place++) { // dodaje pierwsze slowo jako result
+        //cout << base[place];
+        if (base[place] != ' ') {
+            result += base[place];
+            //cout << result << endl;
+        }
+        else {
+            //cout << result;
+            shift = place + 1; // moze wskazac na \0
+            break;
+        }
+        //cout << result;
+        shift = place + 1; // moze wskazac na \0
+    }
+    //cout << result;
+    while (base[shift] != 0) { // kolejne slowo
+        word = "";
+        for (int place = shift; place < base.size(); place++) {
+            if (base[place] != ' ') {
+                word += base[place];
+            }
+            else {
+                shift = place + 1; // moze wskazac na \0
+                break;
+            }
+            shift = place + 1; // moze wskazac na \0
+        }
+        //cout << word << " " << result << endl;
+        // porownanie word i result
+        loc = 0;
+        while (word[loc] != 0 && result[loc] != 0) {
+            wordint = word[loc];
+            resultint = result[loc];
+            //cout << resultint << " " << wordint;
+            if (word[loc] == result[loc]) {
+                loc++;
+                if (word[loc] != 0 && result[loc] == 0) {
+                    result = word;
+                }
+            }
+            else if (wordint > resultint) {
+                //cout << "i tu";
+                result = word;
+                break;
+            }
+            else {
+                break;
+            }
+        }
+        //cout << "git";
+    }
+
+    return result;
+}
+string FormatujNapis(string sentence, string parameter1, string parameter2, string parameter3) {
+    string result;
+    for (int place = 0; place < sentence.size(); place++) {
+        if (sentence[place] == '{') {
+            if (sentence[place + 1] == 'p') {
+                int range1 = sentence[place + 3] - 48;
+                int element = sentence[place + 5];
+                for (int num = 0; num < range1; num++) {
+                    result += element;
+                }
+                place += 6;
+            }
+            else if (sentence[place + 1] == 'w') {
+                switch (sentence[place + 3]) {
+                    case '1':
+                        result += parameter1;
+                        break;
+                    case '2':
+                        result += parameter2;
+                        break;
+                    case '3':
+                        result += parameter3;
+                        break;
+                }
+                place += 4;
+            }
+            else if (sentence[place + 1] == 'W') {
+                string toadd;
+                int range = sentence[place + 5] - 48;
+                switch (sentence[place + 3]) {
+                    case '1':
+                        toadd = parameter1;
+                        while (parameter1.size() < range) {
+                            toadd += ' ';
+                            range--;
+                        }
+                        while (parameter1.size() > range) {
+                            toadd.resize(toadd.size() - 1);
+                            range++;
+                        }
+                        result += toadd;
+                        break;
+                    case '2':
+                        toadd = parameter2;
+                        while (parameter2.size() < range) {
+                            toadd += ' ';
+                            range--;
+                        }
+                        while (parameter2.size() > range) {
+                            toadd.resize(toadd.size() - 1);
+                            range++;
+                        }
+                        result += toadd;
+                        break;
+                    case '3':
+                        toadd = parameter3;
+                        while (parameter3.size() < range) {
+                            toadd += ' ';
+                            range--;
+                        }
+                        while (parameter3.size() > range) {
+                            toadd.resize(toadd.size() - 1);
+                            range++;
+                        }
+                        result += toadd;
+                        break;
+                }
+                place += 6;
+            }
+            else if (sentence[place + 1] == 'u') {
+                int range = sentence[place + 3] - 48;
+                for (int num = 0; num < range; num++) {
+                    place++;
+                }
+                place += 4;
+            }
+            else if (sentence[place + 1] == 'U') {
+                int range = sentence[place + 3] - 48;
+                for (int num = 0; num < range; num++) {
+                    if (result.size() != 0) {
+                        result.resize(result.size() - 1);
+                    }
+                }
+                place += 4;
+            }
+        }
+        else {
+            result += sentence[place];
+        }
+    }
+    return result;
+}
