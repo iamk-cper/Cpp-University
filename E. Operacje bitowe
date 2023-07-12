@@ -1,0 +1,306 @@
+Nazwa pliku: bitwise_operations.h
+
+//Kacper Mycka
+
+#ifndef MAIN_CPP_BITWISE_OPERATIONS_H
+#define MAIN_CPP_BITWISE_OPERATIONS_H
+
+void Insert(char* src, int* dir);
+void Emplace(char* src, int* dir);
+void Erase(char* src, int* dir);
+void Print(int src, char* dir);
+bool Emptiness(int set);
+bool Nonempty(int set);
+bool Member(char* src, int dir);
+bool Disjoint(int first, int second);
+bool Conjunctive (int first, int second);
+bool Inclusion(int first, int second);
+bool Equality(int first, int second);
+void Union(int first, int second, int* third);
+void Intersection(int first, int second, int* third);
+void Symmetric(int first, int second, int* third);
+void Difference(int first, int second, int* third);
+void Complement(int first, int* second);
+int Cardinality(int element);
+bool LessThen(int first, int second);
+bool LessEqual(int first, int second);
+bool GreatEqual(int first, int second);
+bool GreatThen(int first, int second);
+
+#endif //MAIN_CPP_BITWISE_OPERATIONS_H*/
+Nazwa pliku: cardinality.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+int Cardinality(int element) {
+    int result = 0;
+    int value = element;
+    if (value < 0) {
+        result += 1;
+    }
+    if (value != 0) {
+        value <<= 1;
+        return Cardinality(value) + result;
+    }
+    else return 0;
+}Nazwa pliku: disjoint_conjunctive.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+bool Disjoint(int first, int second) {
+    if ((first & second) != 0) return 0;
+    else return 1;
+}
+
+bool Conjunctive (int first, int second) {
+    if ((first & second) != 0) return 1;
+    else return 0;
+}Nazwa pliku: emplace.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+void Emplace(char* src, int* dir) {
+    *dir = 0;
+    Insert(src, dir);
+}Nazwa pliku: emptiness_nonempty.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+bool Emptiness(int set) {
+    return (set == 0);
+}
+
+bool Nonempty(int set) {
+    return (set != 0);
+}Nazwa pliku: erase.cpp
+
+//Kacper Mycka
+#include <iostream>
+#include "bitwise_operations.h"
+using namespace std;
+
+void Erase(char* src, int* dir) {
+    int i = 1;
+    if (*src == '1' || *src == '0') {
+        if (*src == '1') {
+            i <<= 16;
+        }
+        if (*(src+1) == '1') {
+            i <<= 8;
+        }
+        if (*(src+2) == '1') {
+            i <<= 4;
+        }
+        if (*(src+3) == '1') {
+            i <<= 2;
+        }
+        if (*(src+4) == '1') {
+            i <<= 1;
+        }
+        *dir = ((i & *dir) ^ (*dir));
+        src += 5;
+        Erase(src, dir);
+    }
+    else if (*src == ' ') {
+        src += 1;
+        Erase(src, dir);
+    }
+}Nazwa pliku: inclusion_equality.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+bool Inclusion(int first, int second) {
+    if (second == (first | second)) return 1;
+    else return 0;
+}
+
+bool Equality(int first, int second) {
+    if (first == second) return 1;
+    else return 0;
+}
+Nazwa pliku: insert.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+void Insert(char* src, int* dir) {
+    int i = 1;
+    if (*src == '1' || *src == '0') {
+        if (*src == '1') {
+            i <<= 16;
+        }
+        if (*(src+1) == '1') {
+            i <<= 8;
+        }
+        if (*(src+2) == '1') {
+            i <<= 4;
+        }
+        if (*(src+3) == '1') {
+            i <<= 2;
+        }
+        if (*(src+4) == '1') {
+            i <<= 1;
+        }
+        *dir |= i;
+        src += 5;
+        Insert(src, dir);
+    }
+    else if (*src == ' ') {
+        src += 1;
+        Insert(src, dir);
+    }
+}Nazwa pliku: member.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+bool Member(char* src, int dir) {
+    int i = 1;
+    if (*src == '1' || *src == '0') {
+        if (*src == '1') {
+            i <<= 16;
+        }
+        if (*(src+1) == '1') {
+            i <<= 8;
+        }
+        if (*(src+2) == '1') {
+            i <<= 4;
+        }
+        if (*(src+3) == '1') {
+            i <<= 2;
+        }
+        if (*(src+4) == '1') {
+            i <<= 1;
+        }
+        if ((i & dir) != 0) return 1;
+        else return 0;
+    }
+    else {
+        src += 1;
+        return Member(src, dir);
+    }
+}Nazwa pliku: operations.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+void Union(int first, int second, int* third) {
+    *third = (first | second);
+}
+
+void Intersection(int first, int second, int* third) {
+    *third = (first & second);
+}
+
+void Symmetric(int first, int second, int* third) {
+    *third = (first ^ second);
+}
+
+void Difference(int first, int second, int* third) {
+    *third = (first & (~second));
+}
+
+void Complement(int first, int* second) {
+    *second = (~first);
+}
+
+Nazwa pliku: print.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+void Print(int src, char* dir) {
+    static int value = 30;
+    static int iter = 0;
+
+    // na pegazie zezwolil Pan na korzystanie ze static int
+    int editsrc = src;
+
+    if (editsrc == 0) {
+        *(dir+0) = 'e';
+        *(dir+1) = 'm';
+        *(dir+2) = 'p';
+        *(dir+3) = 't';
+        *(dir+4) = 'y';
+        iter++;
+    }
+
+    if (src < 0) {
+        editsrc = (src & 2147483647);
+        iter++;
+        *(dir+0) = '1';
+        *(dir+1) = '1';
+        *(dir+2) = '1';
+        *(dir+3) = '1';
+        *(dir+4) = '1';
+        *(dir+5) = ' ';
+    }
+
+    int help = editsrc;
+    help >>= 30;
+
+    if (help == 1) {
+        if (value / 16 == 1) *(dir+0+iter*6) = '1';
+        else *(dir+0+iter*6) = '0';
+        if ((value % 16) / 8 == 1) *(dir+1+iter*6) = '1';
+        else *(dir+1+iter*6) = '0';
+        if ((value % 16 % 8) / 4 == 1) *(dir+2+iter*6) = '1';
+        else *(dir+2+iter*6) = '0';
+        if ((value % 16 % 8 % 4) / 2 == 1) *(dir+3+iter*6) = '1';
+        else *(dir+3+iter*6) = '0';
+        if ((value % 16 % 8 % 4 % 2) == 1) *(dir+4+iter*6) = '1';
+        else *(dir+4+iter*6) = '0';
+        *(dir+5+iter*6) = ' ';
+        iter++;
+        // zapis decymalny
+    }
+
+    editsrc <<= 1;
+    editsrc = (editsrc & 2147483647);
+
+    if (editsrc != 0) { //only
+        value--;
+        Print(editsrc, dir);
+    }
+    else {
+        *(dir+5+(iter-1)*6) = '\0';
+        iter = 0;
+        value = 30;
+    }
+}
+Nazwa pliku: relations.cpp
+
+//Kacper Mycka
+#include "bitwise_operations.h"
+
+bool LessThen(int first, int second) {
+    if (Cardinality(first) < Cardinality(second)) return 1;
+    else if (Cardinality(first) > Cardinality(second)) return 0;
+    else {
+        // rowne cardinality
+        if (first < second) return 1;
+        else return 0;/*
+        if (second < 0 && first >= 0) return 1;
+        else if (first < 0 && second >= 0) return 0;
+        else if (first < second) return 1;
+        else return 0;*/
+    }
+}
+
+bool LessEqual(int first, int second) {
+    if (first == second) return 1;
+    else return LessThen(first, second);
+}
+
+bool GreatEqual(int first, int second) {
+    return !LessThen(first, second);
+}
+
+bool GreatThen(int first, int second) {
+    return !LessEqual(first, second);
+}
