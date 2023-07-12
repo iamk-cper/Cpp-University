@@ -1,0 +1,202 @@
+Nazwa pliku: BST.h
+
+//Kacper Mycka
+
+template <typename KEY_TYPE, typename DATA_TYPE>
+class BST {
+    struct Node {
+        DATA_TYPE data;
+        KEY_TYPE key;
+        Node* right;
+        Node* left;
+        Node(KEY_TYPE newKey, DATA_TYPE newData) : data(newData), key(newKey), right(NULL), left(NULL) {}
+    };
+
+    Node* root;
+    Node** findNodeRecursive(Node** current, KEY_TYPE fKey) {
+        if (*current == NULL) {
+            return current;
+        }
+
+        if (!((*current)->key < fKey) && !(fKey < (*current)->key)) {
+            return current;
+        }
+
+        if (fKey < (*current)->key) {
+            return findNodeRecursive(&((*current)->left), fKey);
+        }
+        else {
+            return findNodeRecursive(&((*current)->right), fKey);
+        }
+    }
+    bool insertRecursive(Node* current, KEY_TYPE iKey, DATA_TYPE iData, Node* newNode) {
+        if (current->key < iKey) {
+            if (current->right == NULL) {
+                current->right = newNode;
+                return true;
+            }
+            return insertRecursive(current->right, iKey, iData, newNode);
+        }
+        else if (iKey < current->key) {
+            if (current->left == NULL) {
+                current->left = newNode;
+                return true;
+            }
+            return insertRecursive(current->left, iKey, iData, newNode);
+        }
+        return false;
+    }
+    bool deleteRecursive(Node** parentPtr) {
+        if (*parentPtr == NULL) {
+            return false;
+        }
+
+        Node* toDel = *parentPtr;
+
+        if (toDel->right == NULL && toDel->left == NULL) {
+            *parentPtr = NULL;
+            delete toDel;
+        }
+        else if (toDel->right != NULL && toDel->left == NULL) {
+            *parentPtr = toDel->right;
+            delete toDel;
+        }
+        else if (toDel->right == NULL && toDel->left != NULL) {
+            *parentPtr = toDel->left;
+            delete toDel;
+        }
+        else {
+            Node* successorParent = toDel;
+            Node* successor = toDel->right;
+
+            while (successor->left != NULL) {
+                successorParent = successor;
+                successor = successor->left;
+            }
+
+            toDel->key = successor->key;
+            toDel->data = successor->data;
+
+            if (successorParent == toDel) {
+                successorParent->right = successor->right;
+            } else {
+                successorParent->left = successor->right;
+            }
+
+            delete successor;
+        }
+
+        return true;
+    }
+
+    void showInorder(Node* p) {
+        if (p != NULL) {
+            showInorder(p->left);
+            cout << p->key << p->data;
+            showInorder(p->right);
+        }
+    }
+    void showPreorder(Node* p) {
+        if (p != NULL) {
+            cout << p->key << p->data;
+            showPreorder(p->left);
+            showPreorder(p->right);
+        }
+    }
+    // wyswietlanie w porzadku postorder
+    void showPostorder(Node *p) {
+        if (p != NULL) {
+            showPostorder(p->left);
+            showPostorder(p->right);
+            cout << p->key << p->data;
+        }
+    }
+    // wyswietlanie w porzadku levelorder
+    void destructorBST(Node* current) {
+        if (current == NULL) return;
+
+        destructorBST(current->left);
+        destructorBST(current->right);
+
+        delete current;
+    }
+    int tree_height(Node* node) {
+        if (node == NULL)
+            return -1;
+        else {
+            // Find the height of left, right subtrees
+            int left_height = tree_height(node->left);
+            int right_height = tree_height(node->right);
+
+            // Find max(subtree_height) + 1 to get the height of the tree
+            return (left_height > right_height ? left_height : right_height) + 1;
+        }
+    }
+    void PrintLevel(Node* node, int level) {
+        if (node == NULL) {
+            return;
+        }
+        if (level == 0) {
+            cout << node->key << node->data;
+        }
+        else if (level > 0) {
+            PrintLevel(node->left, level - 1);
+            PrintLevel(node->right, level - 1);
+        }
+    }
+
+public:
+    BST() {
+        root = NULL;
+    }
+    ~BST() {
+        destructorBST(root);
+        root = NULL;
+    }
+    DATA_TYPE* Search(KEY_TYPE wanted) {
+        Node** searched = findNodeRecursive(&root, wanted);
+        if (searched == NULL) return NULL;
+        else return &(*searched)->data;
+    }
+    bool Insert(KEY_TYPE insKey, DATA_TYPE insData) {
+        Node* newNode = new Node(insKey, insData);
+        if (root == NULL) {
+            root = newNode;
+            return true;
+        }
+
+        bool ret = insertRecursive(root, insKey, insData, newNode);
+        if (ret == true) return true;
+        else {
+            delete newNode;
+            return false;
+        }
+    }
+    bool Delete(KEY_TYPE delKey) {
+        if (root == NULL) {
+            return false;
+        }
+        Node** toDel = findNodeRecursive(&root, delKey);
+        return deleteRecursive(toDel);
+    }
+    void PreOrder() {
+        showPreorder(root);
+    }
+    void PostOrder() {
+        showPostorder(root);
+    }
+    void InOrder() {
+        showInorder(root);
+    }
+    int Height() {
+        return tree_height(root);
+    }
+    // LevelOrder ma najwieksza zlozonosc z posrod wszystkich metod i jest to O(n^2), czyli zgodnie z wymaganiami
+    // Pozostale metody maja glownie zlozonosci O(n) lub O(logn)
+    void LevelOrder() {
+        int height = Height();
+        for (int i = 0; i <= height; i++) {
+            PrintLevel(root, i);
+        }
+    }
+};
