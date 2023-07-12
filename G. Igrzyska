@@ -1,0 +1,487 @@
+// Kacper Mycka
+#include <iostream>
+#include <string>
+using namespace std;
+
+class PLAYER_CLASS {
+protected:
+    unsigned int maxHp;
+    unsigned int currHp;
+    unsigned int damage;
+    unsigned int agility;
+
+    virtual void die() {
+        currHp = 0;
+    }
+
+public:
+    PLAYER_CLASS(unsigned int max = 1, unsigned int curr = 0, unsigned int dmg = 0, unsigned int agl = 0) {
+        maxHp = max;
+        currHp = curr;
+        damage = dmg;
+        agility = agl;
+    }
+    virtual unsigned int getRemainingHealth() {
+        return currHp*100/maxHp;
+    }
+    virtual unsigned int getDamage() {
+        return damage;
+    }
+    virtual unsigned int getAgility() {
+        return agility;
+    }
+    virtual void takeDamage(unsigned int dmg) {
+        if (dmg >= currHp) currHp = 0;
+        else currHp -= dmg;
+    }
+    virtual void applyWinnerReward() {
+        damage += 2;
+        agility += 2;
+    }
+    virtual void cure() {
+        currHp = maxHp;
+    }
+    virtual void printParams() = 0;
+    virtual string getId() {
+        return "";
+    }
+
+    friend class CAESAR_CLASS;
+    friend class SQUAD_CLASS;
+};
+
+class CAESAR_CLASS {
+public:
+    unsigned int judgeCounter;
+    unsigned int attackCounter;
+
+    CAESAR_CLASS() {
+        judgeCounter = 0;
+        attackCounter = 0;
+    }
+
+    void judgeDeathOrLife(PLAYER_CLASS* player) {
+        judgeCounter++;
+        if (judgeCounter % 3 == 0) {
+            judgeCounter = 0;
+            if (attackCounter % 2 == 0) {
+                player->die();
+            }
+            judgeCounter = 0;
+        }
+    }
+};
+
+class ARENA_CLASS {
+private:
+    CAESAR_CLASS caesar;
+public:
+    ARENA_CLASS(CAESAR_CLASS* caesarArg) {
+        caesar = *caesarArg;
+    }
+    void fight(PLAYER_CLASS* first, PLAYER_CLASS* second) {
+        if (first != 0 && second != 0) if (first->getRemainingHealth() != 0 && second->getRemainingHealth() != 0) {
+                PLAYER_CLASS* one = first;
+                PLAYER_CLASS* two = second;
+                // swap if necessary
+                if (first->getAgility() < second->getAgility()) {
+                    one = second;
+                    two = first;
+                }
+                // show arguments
+                one->printParams();
+                two->printParams();
+                // begin fight
+                for (int i = 0; i < 20; i++) {
+                    two->takeDamage(one->getDamage());
+                    caesar.attackCounter++;
+                    two->printParams();
+                    //if (two->getRemainingHealth() == 0) two->die(); implementacja w takeDamage
+                    if (two->getRemainingHealth() < 10) break;
+
+                    one->takeDamage(two->getDamage());
+                    caesar.attackCounter++;
+                    one->printParams();
+                    //if (one->getRemainingHealth() == 0) one->die();
+                    if (one->getRemainingHealth() < 10) break;
+                }
+                // judge alive
+                if (one->getRemainingHealth() > 0) {
+                    caesar.judgeDeathOrLife(one);
+                    one->printParams();
+                }
+                if (one->getRemainingHealth() > 0) {
+                    one->applyWinnerReward();
+                    one->cure();
+                }
+
+                if (two->getRemainingHealth() > 0) {
+                    caesar.judgeDeathOrLife(two);
+                    two->printParams();
+                }
+                if (two->getRemainingHealth() > 0) {
+                    two->applyWinnerReward();
+                    two->cure();
+                }
+
+                one->printParams();
+                two->printParams();
+                caesar.attackCounter = 0;
+            }
+    }
+};
+
+class HUMAN_CLASS : public virtual PLAYER_CLASS {
+private:
+    string id;
+    unsigned int defence;
+public:
+    HUMAN_CLASS(string name, unsigned int def = 10) : PLAYER_CLASS(200,200,30,10) {
+        defence = def;
+        id = name;
+    }
+    void takeDamage(unsigned int dmg) {
+        unsigned int sum = defence + getAgility();
+        if (dmg > sum) dmg -= sum;
+        else dmg = 0;
+        if (dmg >= currHp) currHp = 0;
+        else currHp -= dmg;
+    }
+    void printParams() {
+        if (getRemainingHealth() == 0) cout << id << ":R.I.P." << endl;
+        else cout << id << ":" << maxHp << ":" << currHp << ":" << getRemainingHealth() << "%:" << getDamage() << ":" << getAgility() << ":" << defence << endl;
+    }
+    string getId() {
+        return id;
+    }
+};
+
+class BEAST_CLASS : public virtual PLAYER_CLASS {
+private:
+    string id;
+public:
+    BEAST_CLASS(string name) : PLAYER_CLASS(150,150,40,20) {
+        id = name;
+    }
+    unsigned int getDamage() {
+        if (getRemainingHealth() < 25) return 2 * PLAYER_CLASS::getDamage();
+        else return PLAYER_CLASS::getDamage();
+    }
+    void takeDamage(unsigned int dmg) {
+        unsigned int sum = dmg;
+        unsigned int min = getAgility()/2;
+        if (sum > min) sum -= min;
+        else sum = 0;
+
+        if (sum >= currHp) currHp = 0;
+        else currHp -= sum;
+    }
+    void printParams() {
+        if (getRemainingHealth() == 0) cout << id << ":R.I.P." << endl;
+        else cout << id << ":" << maxHp << ":" << currHp << ":" << getRemainingHealth() << "%:" << getDamage() << ":" << getAgility() << endl;
+    }
+    string getId() {
+        return id;
+    }
+};
+
+class BERSERKER_CLASS : public BEAST_CLASS, public HUMAN_CLASS {
+public:
+    BERSERKER_CLASS(string humanId, string beastId) : PLAYER_CLASS(200,200,35,5), HUMAN_CLASS(humanId, 15), BEAST_CLASS(beastId) {
+    }
+    string getId() {
+        if (getRemainingHealth() != 0 && getRemainingHealth() < 25) {
+            return BEAST_CLASS::getId();
+        }
+        else {
+            return HUMAN_CLASS::getId();
+        }
+    }
+    void printParams() {
+        if (getRemainingHealth() != 0 && getRemainingHealth() < 25) {
+            BEAST_CLASS::printParams();
+        }
+        else {
+            HUMAN_CLASS::printParams();
+        }
+    }
+    void takeDamage(unsigned int dmg) {
+        if (getRemainingHealth() != 0 && getRemainingHealth() < 25) {
+            BEAST_CLASS::takeDamage(dmg);
+        }
+        else {
+            HUMAN_CLASS::takeDamage(dmg);
+        }
+    }
+    unsigned int getDamage() {
+        if (getRemainingHealth() != 0 && getRemainingHealth() < 25) {
+            return BEAST_CLASS::getDamage();
+        }
+        else {
+            return HUMAN_CLASS::getDamage();
+        }
+    }
+};
+
+class LINKED {
+public:
+    PLAYER_CLASS* data;
+    LINKED* prev;
+    LINKED* next;
+    LINKED(PLAYER_CLASS* player = 0, LINKED* nex = 0, LINKED* pre = 0) {
+        prev = pre;
+        next = nex;
+        data = player;
+    }
+};
+
+class SQUAD_CLASS : public PLAYER_CLASS {
+protected:
+    void die() {
+        // method doesnt use die actually, it deletes memory because players cannot be revive;
+        //1. create a temp node
+        LINKED* temp = new LINKED;
+
+        //2. if the head is not null make temp as head and
+        //   move head to head next, then delete the temp,
+        //   continue the process till head becomes null
+        while(First != NULL) {
+            temp = First;
+            First = First->next;
+            delete temp;
+        }
+        // method doesnt use die actually, it deletes memory because players cannot be revive;
+        First = 0;
+        Last = 0;
+        counter = 0;
+    }
+public:
+    LINKED* First;
+    LINKED* Last;
+    unsigned int counter;
+    string id;
+    SQUAD_CLASS(string squadId) : PLAYER_CLASS() {
+        id = squadId;
+        counter = 0;
+        First = 0;
+        Last = 0;
+    }
+    unsigned int getAgility() {
+        if (First != 0) {
+            //
+            LINKED current;
+            current = *First;
+            //
+            unsigned int min = First->data->getAgility();
+            while (current.next != 0) {
+                current = *current.next;
+                if (current.data->getAgility() < min) min = current.data->getAgility();
+            }
+            return min;
+        }
+        return 0;
+    }
+    unsigned int getDamage() {
+        if (First != 0) {
+            //
+            LINKED current;
+            current = *First;
+            //
+            unsigned int damage = First->data->getDamage();
+            while (current.next != 0) {
+                current = *current.next;
+                damage += current.data->getDamage();
+            }
+            return damage;
+        }
+        return 0;
+    }
+    void takeDamage(unsigned int dmg) {
+        if (counter != 0) {
+            unsigned int damage = dmg / counter;
+            if (First != 0) {
+                LINKED* current = First;
+                while (current != 0) {
+                    current->data->takeDamage(damage);
+                    if (current->data->getRemainingHealth() == 0) {
+                        counter--;
+                        LINKED* nextNode = current->next;
+
+                        if (current == First) {
+                            First = current->next;
+                            if (First != 0) {
+                                First->prev = 0;
+                            }
+                        }
+                        if (current == Last) {
+                            Last = current->prev;
+                            if (Last != 0) {
+                                Last->next = 0;
+                            }
+                        }
+
+                        delete current;
+                        current = nextNode;
+                    } else {
+                        current = current->next;
+                    }
+                }
+            }
+        }
+    }
+    unsigned int getRemainingHealth() {
+        if (First != 0) {
+            //
+            LINKED current;
+            current = *First;
+            //
+            unsigned int health = current.data->getRemainingHealth();
+            while (current.next != 0) {
+                current = *current.next;
+                if (current.data->getRemainingHealth() > health) health = current.data->getRemainingHealth();
+            }
+            return health;
+        }
+        return 0;
+    }
+    void cure() {
+        if (First != 0) {
+            //
+            LINKED* current = First;
+            //
+            current->data->cure();
+            while (current->next != 0) {
+                current = current->next;
+                current->data->cure();
+            }
+        }
+    }
+    void applyWinnerReward() {
+        if (First != 0) {
+            //
+            LINKED* current = First;
+            //
+            current->data->applyWinnerReward();
+            while (current->next != 0) {
+                current = current->next;
+                current->data->applyWinnerReward();
+            }
+        }
+    }
+    void printParams() {
+        if (First != 0) {
+            cout << id << ":" << counter << ":" << getRemainingHealth() << "%:" << getDamage() << ":" << getAgility() << endl;
+            selectionSort(First);
+            findLast(First);
+            LINKED current;
+            current = *First;
+            //
+            current.data->printParams();
+            while (current.next != 0) {
+                current = *current.next;
+                current.data->printParams();
+            }
+        }
+        else {
+            cout << id << ":nemo" << endl;
+        }
+    }
+    void selectionSort(LINKED* head) {
+        LINKED* temp = head;
+
+        // Traverse the List
+        while (temp) {
+            LINKED* min = temp;
+            LINKED* r = temp->next;
+
+            // Traverse the unsorted sublist
+            while (r) {
+                bool legit = false;
+                if (r->data->getId() < min->data->getId()) legit = true;
+                else if (r->data->getId() == min->data->getId()) {
+                    if (r->data->maxHp < min->data->maxHp) legit = true;
+                    else if (r->data->maxHp == min->data->maxHp) {
+                        if (r->data->currHp < min->data->currHp) legit = true;
+                        else if (r->data->currHp == min->data->currHp) {
+                            if (r->data->damage < min->data->damage) legit = true;
+                            else if (r->data->damage == min->data->damage) {
+                                if (r->data->agility <= min->data->agility) legit = true;
+                            }
+                        }
+                    }
+                }
+                if (legit) {
+                    min = r;
+                } // nadpisany operator
+                r = r->next;
+            }
+
+            // Swap Data
+            PLAYER_CLASS* x = temp->data;
+            temp->data = min->data;
+            min->data = x;
+            temp = temp->next;
+        }
+
+    }
+    void findLast(LINKED* head) {
+        LINKED* temp = head;
+        LINKED* max = temp;
+        LINKED* r = temp->next;
+
+        // Traverse the unsorted sublist
+        while (r) {
+            bool legit = false;
+            if (r->data->getId() > max->data->getId()) legit = true;
+            else if (r->data->getId() == max->data->getId()) {
+                if (r->data->currHp > max->data->currHp) legit = true;
+                else if (r->data->currHp == max->data->currHp) {
+                    if (r->data->getRemainingHealth() > max->data->getRemainingHealth()) legit = true;
+                    else if (r->data->getRemainingHealth() == max->data->getRemainingHealth()) {
+                        if (r->data->damage > max->data->damage) legit = true;
+                        else if (r->data->damage == max->data->damage) {
+                            if (r->data->agility > max->data->agility) legit = true;
+                        }
+                    }
+                }
+            }
+            if (legit) {
+                max = r;
+            } // nadpisany operator
+            r = r->next;
+        }
+    }
+    void addPlayer(PLAYER_CLASS* player) {
+        if (player->getRemainingHealth() != 0) {
+            if (First == 0) {
+                LINKED* nwFirst = new LINKED;
+                nwFirst->data = player;
+                First = nwFirst;
+                Last = nwFirst;
+                counter++;
+            }
+            else {
+                // check if exist
+                LINKED* current = First;
+                if (current->data == player) {
+                    //delete current;
+                    return;
+                }
+                while (current->next != 0) {
+                    current = current->next;
+                    if (current->data == player) {
+                        //delete current;
+                        return;
+                    }
+                }
+                // add element
+                LINKED* nwFirst = new LINKED;
+                nwFirst->data = player;
+                Last->next = nwFirst;
+                nwFirst->prev = Last;
+                Last = nwFirst;
+                counter++;
+            }
+        }
+    }
+};
