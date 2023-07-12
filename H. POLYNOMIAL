@@ -1,0 +1,435 @@
+// Modulo and dividing doesn't work (it's not even close btw)
+Nazwa pliku: POLYNOMIAL.cpp
+// Kacper Mycka
+
+class POLYNOMIAL;
+void deleteDegree(POLYNOMIAL &toDel);
+void divide(POLYNOMIAL ÷r);
+int gcdOfArray(int *array, int arraySize);
+void fullfill(int* array, int degree, int num);
+
+class POLYNOMIAL {
+public:
+    static int overloaded;
+    int degree;
+    int *array;
+
+    POLYNOMIAL() {
+        degree = 0;
+        array = new int[1];
+        array[0] = 0;
+    }
+
+    POLYNOMIAL copy(const POLYNOMIAL& toCopy) {
+        POLYNOMIAL newOne;
+        newOne = toCopy;
+        return newOne;
+    }
+
+    POLYNOMIAL& operator=(const POLYNOMIAL &object) {
+        int* newArray = new int[object.degree + 1];
+        for (int i = 0; i <= object.degree; i++) {
+            newArray[i] = object.array[i];
+        }
+        delete[] array;
+        array = newArray;
+        degree = object.degree;
+        return *this;
+    }
+
+    POLYNOMIAL(int argDegree, ...) {
+        this->degree = argDegree;
+        this->array = new int[degree + 1];
+        va_list args;
+        va_start(args, argDegree);  // Updated the second argument of va_start
+        for (int i = 0; i <= degree; i++) {
+            array[i] = va_arg(args, int);
+        }
+        va_end(args);
+
+        deleteDegree(*this);
+        divide(*this);
+    }
+//
+//    ~POLYNOMIAL() {
+//        delete[] array;
+//    }
+
+    POLYNOMIAL operator-() { // unarny operator
+        POLYNOMIAL newOne = copy(*this);
+        for (int i = 0; i <= degree; i++) {
+            newOne.array[i] = -this->array[i];
+        }
+        deleteDegree(newOne);
+        divide(newOne);
+        return newOne;
+    }
+
+    POLYNOMIAL operator+(const POLYNOMIAL& object) {
+        int newDegree = this->degree;
+        if (degree < object.degree) newDegree = object.degree;
+        // ^ wieksze degree jest newDegree
+        POLYNOMIAL newOne;
+        if (newDegree == this->degree) newOne = copy(*this);
+        else newOne = copy(object);
+        //newOne.fullfill(1);
+        if (this->degree >= object.degree) {
+            for (int i = 0; i <= object.degree; i++) {
+                newOne.array[i] = this->array[i] + object.array[i];
+            }
+            for (int i = object.degree + 1; i <= this->degree; i++) {
+                newOne.array[i] = this->array[i];
+            }
+        }
+        else { // object.degree > this->degree
+            for (int i = 0; i <= this->degree; i++) {
+                newOne.array[i] = array[i] + object.array[i];
+            }
+            for (int i = this->degree + 1; i <= object.degree; i++) {
+                newOne.array[i] = object.array[i];
+            }
+        }
+        deleteDegree(newOne);
+        divide(newOne);
+        return newOne;
+    }
+
+    POLYNOMIAL& operator+=(const POLYNOMIAL &object) {
+        *this = (*this) + object;
+        return *this;
+    }
+
+    void* operator new(size_t size) {
+        overloaded++;
+        return ::operator new(size);
+    }
+
+    void operator delete(void* ptr) {
+        overloaded--;
+        ::operator delete(ptr);
+    }
+
+    POLYNOMIAL operator<<(int counter) {
+        POLYNOMIAL newOne;
+        if (counter >= 0) {
+            int newDegree = degree - counter;
+            if (newDegree < 0) newDegree = 0;
+            newOne.degree = newDegree;
+            int* newArray = new int[newDegree + 1];
+            if (degree - counter + 1 > 0)  {
+                int oldDegree = degree;
+                for (int i = newDegree; i >= 0; i--) {
+                    newArray[i] = array[oldDegree];
+                    oldDegree--;
+                }
+            }
+            else {
+                newArray[0] = 0;
+            }
+            delete[] newOne.array;
+            newOne.array = newArray;
+            deleteDegree(newOne);
+            divide(newOne);
+        }
+        return newOne;
+    }
+
+    POLYNOMIAL& operator<<=(int counter) {
+        *this = (*this) << counter;
+        return *this;
+    }
+
+    POLYNOMIAL operator>>(int counter) {
+        POLYNOMIAL newOne;
+        if (counter >= 0) {
+            int newDegree = degree + counter; // 4 + 2
+            //if (degree == 0 && array[0] == 0) newDegree = 0;
+            int oldDegree = degree; // 4
+            newOne.degree = newDegree;
+            int* newArray = new int[newDegree + 1];
+            for (int i = newDegree; i >= counter; i--) { // 9,8,7,6,5 - 4,3,2,1,0
+                newArray[i] = array[oldDegree];
+                oldDegree--;
+            }
+            for (int i = counter - 1; i >= 0; i--) {
+                newArray[i] = 0;
+            }
+            delete[] newOne.array;
+            newOne.array = newArray;
+            deleteDegree(newOne);
+        }
+        return newOne;
+    }
+
+    POLYNOMIAL& operator>>=(int counter) {
+        *this = (*this) >> counter;
+        return *this;
+    }
+
+    POLYNOMIAL operator++(int) {
+        POLYNOMIAL newOne = copy(*this);
+
+        for (int i = 0; i <= degree; i++) {
+            array[i]++;
+        }
+        deleteDegree(*this);
+        divide(*this);
+
+        return newOne;
+    }
+
+    POLYNOMIAL operator--(int) {
+        POLYNOMIAL newOne = copy(*this);
+
+        for (int i = 0; i <= degree; i++) {
+            array[i]--;
+        }
+        deleteDegree(*this);
+        divide(*this);
+
+        return newOne;
+    }
+
+    POLYNOMIAL& operator++() {
+        for (int i = 0; i <= degree; i++) {
+            array[i]++;
+        }
+        deleteDegree(*this);
+        divide(*this);
+        return *this;
+    }
+
+    POLYNOMIAL& operator--() {
+        for (int i = 0; i <= degree; i++) {
+            array[i]--;
+        }
+        deleteDegree(*this);
+        divide(*this);
+        return *this;
+    }
+
+    POLYNOMIAL operator/(POLYNOMIAL& object) {
+        int helper = this->degree - object.degree;
+        int newDegree = helper;
+        if (helper < 0) newDegree = 0;
+        POLYNOMIAL newOne;
+        int* newArray = new int[newDegree + 1];
+        POLYNOMIAL thisCopy = copy(*this);
+        newOne.degree = newDegree;
+        if (helper >= 0 && !(object.degree == 0 && object.array[0] == 0)) {
+            for (int i = degree; i >= object.degree; i--) {
+                newArray[helper] = thisCopy.array[i] / object.array[object.degree];
+
+                POLYNOMIAL temp;
+                temp.degree = newDegree;
+                fullfill(temp.array, newDegree, 0);
+                temp.array[helper] = newArray[helper--];
+                deleteDegree(temp);
+
+                thisCopy -= (temp * object);
+                newDegree--;
+            }
+
+            delete[] newOne.array;
+            newOne.array = newArray;
+            deleteDegree(newOne);
+            divide(newOne);
+        }
+        return newOne;
+    }
+
+    POLYNOMIAL operator%(POLYNOMIAL& other) {
+        POLYNOMIAL quotient = (*this) / other;
+        POLYNOMIAL remainder = (*this) - (other * quotient);
+        return remainder;
+    }
+
+    POLYNOMIAL operator-(const POLYNOMIAL &object) {
+        int newDegree = this->degree; //1
+        if (degree < object.degree) newDegree = object.degree; //2
+        POLYNOMIAL newOne;
+        if (newDegree == degree) newOne = copy(*this); //1
+        else newOne = copy(object); // 2
+
+        if (this->degree >= object.degree) { // 1
+            for (int i = 0; i <= object.degree; i++) {
+                newOne.array[i] = this->array[i] - object.array[i];
+            }
+            for (int i = object.degree + 1; i <= this->degree; i++) {
+                newOne.array[i] = this->array[i];
+            }
+        }
+        else { // 2
+            int *newArray = new int[object.degree + 1];
+            for (int i = 0; i <= this->degree; i++) {
+                newOne.array[i] = array[i] - object.array[i];
+            }
+            for (int i = this->degree + 1; i <= object.degree; i++) {
+                newOne.array[i] = -object.array[i];
+            }
+        }
+        deleteDegree(newOne);
+        divide(newOne);
+        return newOne;
+    }
+
+    POLYNOMIAL& operator-=(const POLYNOMIAL &object) {
+        *this = (*this) - object;
+        return *this;
+    }
+
+    POLYNOMIAL operator*(const POLYNOMIAL &object) {
+        POLYNOMIAL newOne;
+        if (!(degree == 0 && array[0] == 0) && !(object.degree == 0 && object.array[0] == 0)) {
+            newOne.degree = degree + object.degree;
+            int* newArray = new int[degree + object.degree + 1];
+            fullfill(newArray, degree + object.degree, 0);
+
+            for (int i = 0; i <= degree; i++) {
+                for (int j = 0; j <= object.degree; j++) {
+                    newArray[i + j] += this->array[i] * object.array[j];
+                }
+            }
+
+            delete[] newOne.array;
+            newOne.array = newArray;
+
+            divide(newOne);
+            deleteDegree(newOne);
+        }
+        return newOne;
+    }
+
+    POLYNOMIAL& operator*=(const POLYNOMIAL &object) {
+        *this = (*this) * object;
+        return *this;
+    }
+
+    friend ostream& operator<< (ostream& stream, const POLYNOMIAL& object);
+    friend istream& operator>> (istream& stream, POLYNOMIAL& object);
+
+};
+
+bool operator==(const POLYNOMIAL& first, const POLYNOMIAL& second) {
+    if (first.degree != second.degree) return false;
+    else {
+        for (int i = 0; i <= first.degree; i++) {
+            if (first.array[i] != second.array[i]) return false;
+        }
+    }
+    return true;
+}
+
+bool operator<(const POLYNOMIAL& first, const POLYNOMIAL& second) {
+    if (first.degree > second.degree) return false;
+    else if (first.degree < second.degree) return true;
+    else { // degree == degree
+        for (int i = 0; i <= first.degree; i++) {
+            if (first.array[i] > second.array[i]) return false;
+            else if (first.array[i] < second.array[i]) return true;
+        }
+    }
+    return false;
+}
+
+bool operator>(const POLYNOMIAL& first, const POLYNOMIAL& second) {
+    if (first.degree < second.degree) return false;
+    else if (first.degree > second.degree) return true;
+    else { // degree == degree
+        for (int i = 0; i <= first.degree; i++) {
+            if (first.array[i] < second.array[i]) return false;
+            else if (first.array[i] > second.array[i]) return true;
+        }
+    }
+    return false;
+}
+
+bool operator<=(const POLYNOMIAL& first, const POLYNOMIAL& second) {
+    if (first < second || first == second) return true;
+    else return false;
+}
+
+bool operator>=(const POLYNOMIAL& first, const POLYNOMIAL& second) {
+    if (first > second || first == second) return true;
+    else return false;
+}
+
+bool operator!=(const POLYNOMIAL& first, const POLYNOMIAL& second) {
+    return !(first == second);
+}
+
+ostream& operator<<(ostream& stream, const POLYNOMIAL& object) {
+    // szukac gdzies dzielnika
+    stream << "(";
+    if (object.degree == 0 && object.array[0] == 0) {
+        stream << " 0";
+    }
+    else {
+        for (int i = 0; i <= object.degree; i++) {
+            stream << " " << object.array[i];
+            if (i != object.degree) stream << ",";
+        }
+    }
+    stream << " )";
+    return stream;
+}
+
+istream& operator>>(istream& stream, POLYNOMIAL& object) {
+    stream >> object.degree;
+    int* newArray = new int[object.degree + 1];
+
+    for (int i = 0; i <= object.degree; i++) {
+        stream >> newArray[i];
+    }
+
+    delete[] object.array;
+    object.array = newArray;
+    deleteDegree(object);
+    divide(object);
+    return stream;
+}
+
+int getGcd(int a, int b) { // algorytm euklidesa
+    if (a == 0)
+        return b;
+    return getGcd(b % a, a);
+}
+
+int gcdOfArray(int *array, int arraySize) {
+    int gcd = 0;
+    for (int i = 0; i < arraySize; i++) {
+        gcd = getGcd(gcd, array[i]);
+    }
+    if (gcd < 0) gcd = -gcd;
+    return gcd;
+}
+
+void deleteDegree(POLYNOMIAL &toDel) {
+    if (toDel.array[toDel.degree] == 0 && toDel.degree != 0) {
+        for (int i = toDel.degree; i > 0; i--) {
+            if (toDel.array[i] == 0) toDel.degree--;
+            else break;
+        }
+        int *newArray = new int[toDel.degree + 1];
+        for (int i = 0; i <= toDel.degree; i++) {
+            newArray[i] = toDel.array[i];
+        }
+        delete[] toDel.array;
+        toDel.array = newArray;
+    }
+}
+
+void divide(POLYNOMIAL& divider) {
+    int divisor = gcdOfArray(divider.array, divider.degree + 1);
+    if (divisor > 1) {
+        for (int i = 0; i <= divider.degree; i++) {
+            divider.array[i] = divider.array[i] / divisor;
+        }
+    }
+}
+
+void fullfill(int* array, int degree, int num) {
+    for (int i = 0; i <= degree; i++) {
+        array[i] = num;
+    }
+}
