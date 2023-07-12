@@ -1,0 +1,403 @@
+Nazwa pliku: Mult.cpp
+
+//Kacper Mycka
+#include <cstdarg>
+#include <string>
+
+using namespace std;
+
+string addtwo(string first, string second, string result = "", int next = 0, int i = 1);
+string skip(string num, string result = "", int i = 0, bool f = true);
+
+string multnum(string first, string second, string& result, int j, int next = 0, int i = 0) { // result = "";
+    int sum;
+    if (i < first.length()) {
+        i++;
+        sum = (second[second.length() - j]-48) * (first[first.length()-i]-48) + next;
+        if (sum > 9) {
+            next = sum / 10;
+            sum = sum % 10;
+        }
+        else {
+            next = 0;
+        }
+        char nwchar = sum + 48;
+        result = multnum(first, second, result, j, next, i) + nwchar;
+    }
+    else if (next != 0) {
+        char nwchar = next + 48;
+        result = nwchar + result;
+        next = 0;
+    }
+    return result;
+}
+
+string multtwo(string first, string second, string& result, int next = 0, int j = 0) { // result = "0";
+    if (j < second.length()) {
+        j++;
+        string resarg = "";
+        string arg1 = multnum( first, second, resarg, j);
+
+        result = multtwo(first, second, result, next, j);
+        result = addtwo(result, arg1 + string(j - 1, '0'));
+    }
+    return result;
+}
+
+string arrMult(int counter, const string* numbers, string& result, int i = -1) { // result = "1";
+    if (i < counter - 1) {
+        string multres = "0";
+        i++;
+
+        string arg1 = arrMult(counter,numbers,result, i);
+        string arg2 = numbers[i];
+
+        if ((arg1[0] != arg2[0]) && (arg1[0] == '-' || arg2[0] == '-')) {
+            result = '-' + skip(multtwo(skip(arg1), skip(arg2), multres));
+        }
+        else {
+            result = skip(multtwo(skip(arg1), skip(arg2), multres));
+        }
+    }
+    return result;
+}
+
+string vaMult(int counter, va_list args, string& result, int i = 0) { // result = "1";
+    if (i < counter) {
+        string arg1 = va_arg(args,char*);
+        string output = "0";
+
+        if ((arg1[0] != result[0]) && (arg1[0] == '-' || result[0] == '-')) {
+            result = '-' + skip(multtwo(skip(arg1), skip(result), output));
+        }
+        else {
+            result = skip(multtwo(skip(arg1), skip(result), output));
+        }
+        i++;
+
+       /* //
+        string arg2 = vaMult(counter, args, result, i);
+        if ((arg2[0] != result[0]) && (arg2[0] == '-' || result[0] == '-')) {
+            return '-' + skip(multtwo(skip(arg2), skip(result), output));
+        }
+        else {
+            return skip(multtwo(arg2, skip(result), output));
+        }
+        //*/
+        return vaMult(counter, args, result, i);
+    }
+    return result;
+}
+
+string Mult(int counter, const string* numbers) {
+    string result = "1";
+    string output = arrMult(counter, numbers, result);
+    if (output == "-0") {
+        return "0";
+    }
+    else {
+        return output;
+    }
+}
+
+string Mult(int counter, ...) {
+    va_list args;
+    va_start(args, counter);
+    string output = "1";
+    output = vaMult(counter,args,output);
+    va_end(args);
+    if (output == "-0") return "0";
+    else return output;
+}
+
+void Mult(string* result, int counter, const string* numbers) {
+    *result = Mult(counter, numbers);
+}
+void Mult(string* result, int counter, ...) {
+    va_list args;
+    va_start(args, counter);
+    string output = "1";
+    output = vaMult(counter,args,output);
+    va_end(args);
+    if (output == "-0") output = "0";
+    *result = output;
+}
+void Mult(string& result, int counter, const string* numbers) {
+    result = Mult(counter, numbers);
+}
+void Mult(string& result, int counter, ...) {
+    va_list args;
+    va_start(args, counter);
+    string output = "1";
+    output = vaMult(counter,args,output);
+    va_end(args);
+    if (output == "-0") output = "0";
+    result = output;
+}Nazwa pliku: Operation.cpp
+
+//Kacper Mycka
+#include <cstdarg>
+#include <string>
+
+using namespace std;
+
+string vaMult(int counter, va_list args, string& result, int i = 0);
+string vaSum(int counter, va_list args, string& result, int i = 0);
+
+string Operation(string (*function)(int, const string*), int ctr, ...) {
+    va_list args;
+    va_start(args, ctr);
+    string result;
+
+    string test[] = {"2","-2"};
+    if (function(2,test) == "-4") {
+        result = "1";
+        result = vaMult(ctr,args,result);
+    }
+    else result = vaSum(ctr,args,result);
+
+    va_end(args);
+    if (result == "-0") return "0";
+    else return result;
+}
+void Operation(string* result, string (*function)(int, const string*), int ctr, ...) {
+    va_list args;
+    va_start(args, ctr);
+    string output;
+
+    string test[] = {"2","-2"};
+    if (function(2,test) == "-4") {
+        output = "1";
+        output = vaMult(ctr,args,output);
+    }
+    else output = vaSum(ctr,args,output);
+
+    va_end(args);
+    if (output == "-0") output = "0";
+    *result = output;
+}
+void Operation(string& result, void (*function)(string*, int, const string*), int ctr, ...) {
+    va_list args;
+    va_start(args, ctr);
+    string output;
+
+    string test[] = {"2","-2"};
+    function(&output,2,test);
+
+    if (output == "-4") {
+        output = "1";
+        output = vaMult(ctr,args,output);
+    }
+    else {
+        output = "";
+        output = vaSum(ctr,args,output);
+    }
+
+    va_end(args);
+    if (output == "-0") output = "0";
+    result = output;
+}
+
+string Operation(string (*function)(int, const string*), int ctr, const string* nums) {
+    return function(ctr, nums);
+}
+void Operation(string* result, string (*function)(int, const string*), int ctr, const string* nums) {
+    *result = function(ctr, nums);
+}
+void Operation(string& result, void (*function)(string*, int, const string*), int ctr, const string* nums) {
+    function(&result, ctr, nums);
+}Nazwa pliku: Sum.cpp
+
+//Kacper Mycka
+#include <cstdarg>
+#include <string>
+
+using namespace std;
+
+// przyjmuje 2 liczby dodatnie bez znaku
+string addtwo(string first, string second, string result = "", int next = 0, int i = 1) {
+    int arg1 = first.length() - i;
+    int arg2 = second.length() - i;
+    int sum;
+
+    if (arg1 >= 0 && arg2 >= 0) {
+        sum = first[arg1] + second[arg2] - 96 + next;
+    }
+    else if (arg1 >= 0) { // arg2 < 0
+        sum = first[arg1] - 48 + next;
+    }
+    else if (arg2 >= 0) { // arg1 < 0
+        sum = second[arg2] - 48 + next;
+    }
+    else if (next == 1) { // koniec argumentow
+        return "1" + result;
+    }
+    else {
+        return "" + result;
+    }
+
+    if (sum > 9) {
+        next = 1;
+        sum -= 10;
+    }
+    else {
+        next = 0;
+    }
+
+    i++;
+    char nwchar = sum + 48;
+    result = addtwo(first, second, result, next, i) + nwchar;
+    return result;
+}
+
+// pomija +, - i 0 z przodu
+string skip(string num, string result = "", int i = 0, bool f = true) { // i = 0 i result = ""
+    if (f && i != num.length()) { // pomija
+        if (num[i] != '-' && num[i] != '0' && num[i] != '+') {
+            result += num[i];
+            f = false;
+        }
+        i++;
+        result = skip(num, result, i, f);
+    }
+    else if (!f && i != num.length()) { // koniec pomijania
+        result += num[i];
+        i++;
+        result = skip(num, result, i, f);
+    }
+    if (result == "" && i == num.length()) {
+        return "0";
+    }
+    else return result;
+}
+
+// okreslenie wiekszosci
+bool bigger(string first, string second, int i = 0) {
+    if (first.length() == second.length()) {
+        if (first[i] > second[i]) return 1;
+        else if (first[i] < second[i]) return 0;
+        else {
+            i++;
+            if (i == first.length()) return 0; // wyznaczam jak uznajemy zero
+            else return bigger(first, second, i);
+        }
+    }
+    else if (first.length() < second.length()) return 0;
+    else return 1;
+    return 0;
+}
+
+// odejmuje dwie liczby bez znaku
+string subtwo(string first, string second, string result = "", int next = 0, int i = 1) {
+    int arg1 = first.length() - i;
+    int arg2 = second.length() - i;
+    int sum;
+
+    if (arg1 >= 0 && arg2 >= 0) {
+        sum = first[arg1] - second[arg2] - next;
+    }
+    else if (arg1 >= 0) { // arg2 < 0
+        sum = first[arg1] - 48 - next;
+    }
+    else {
+        return "" + result;
+    }
+
+    if (sum < 0) {
+        next = 1;
+        sum += 10;
+    }
+    else {
+        next = 0;
+    }
+
+    i++;
+    char nwchar = sum + 48;
+    result = subtwo(first, second, result, next, i) + nwchar;
+    return result;
+}
+
+// dodaje lub odejmuje dwa stringi
+string subsum(string first, string second) {
+    string arg1 = skip(first);
+    string arg2 = skip(second);
+    if ((first[0] == '-' || second[0] == '-') && (first[0] != second[0])) { // odejmowanie
+        if (bigger(arg1,arg2)) {
+            if (first[0] == '-') return '-' + skip(subtwo(arg1,arg2));
+            else return skip(subtwo(arg1, arg2));
+        }
+        else {
+            if (first[0] == '-' || (arg1 == arg2)) return skip(subtwo(arg2,arg1));
+            else return '-' + skip(subtwo(arg2,arg1));
+        }
+    }
+    else {
+        if (first[0] == '-') {
+            return '-' + addtwo(arg1,arg2);
+        }
+        else {
+            return addtwo(arg1,arg2);
+        }
+    }
+}
+
+// obsluga va_listy
+string vaSum(int counter, va_list args, string& result, int i = 0) {
+    if (i < counter) {
+        string arg1 = va_arg(args,char*);
+        result = subsum(arg1,result);
+        i++;
+        vaSum(counter, args, result, i);
+    }
+    return result;
+}
+
+// obsluga tablicy
+string arrSum(int counter, const string* numbers, string& result, int i = 0) {
+    if (i < counter) {
+        result = subsum(numbers[i],result);
+        i++;
+        arrSum(counter, numbers, result, i);
+    }
+    return result;
+}
+string Sum(int counter, const string* numbers) {
+    string result = "0";
+    string output = arrSum(counter, numbers, result);
+    if (output == "-0") return "0";
+    else return output;
+}
+string Sum(int counter, ...) {
+    va_list args;
+    va_start(args, counter);
+    string result;
+    result = vaSum(counter,args,result);
+    va_end(args);
+    if (result == "-0") return "0";
+    else return result;
+}
+
+void Sum(string* result, int counter, const string* numbers) {
+    *result = Sum(counter, numbers);
+}
+void Sum(string* result, int counter, ...) {
+    va_list args;
+    va_start(args, counter);
+    string output;
+    output = vaSum(counter,args,output);
+    va_end(args);
+    if (output == "-0") output = "0";
+    *result = output;
+}
+void Sum(string& result, int counter, const string* numbers) {
+    result = Sum(counter, numbers);
+}
+void Sum(string& result, int counter, ...) {
+    va_list args;
+    va_start(args, counter);
+    string output;
+    output = vaSum(counter,args,output);
+    va_end(args);
+    if (output == "-0") output = "0";
+    result = output;
+}
