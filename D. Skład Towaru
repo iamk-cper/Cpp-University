@@ -1,0 +1,957 @@
+//Kacper Mycka
+// some test doesnt work unfortunetly
+#include <iostream>
+using namespace std;
+
+struct Place {
+    unsigned short products;
+    char label[2];
+};
+struct Shelf {
+    Place place[128]{};
+    unsigned short size = 0;
+};
+struct Rack {
+    Shelf shelf[128];
+    unsigned short size = 0;
+};
+struct Warehouse {
+    Rack rack[128];
+    Shelf warehouseShelf;
+    unsigned short size = 0;
+};
+struct Stock {
+    Warehouse warehouse[128];
+    Shelf stockShelf;
+    Rack stockRack;
+    unsigned short size = 0;
+};
+
+Stock stock;
+unsigned long long TOTAL_SUM = 0;
+unsigned long long sum;
+
+void SETAP(int w, int r, int s, int P) {
+    if (P >= 0 && P < 129 && w >= 0 && w < stock.size && r >= 0 && r < stock.warehouse[w].size && s >= 0 && s < stock.warehouse[w].rack[r].size) {
+        for (int p1 = stock.warehouse[w].rack[r].shelf[s].size; p1 < P; p1++) { // nowe zerujemy
+            stock.warehouse[w].rack[r].shelf[s].place[p1].label[0] = 0;
+            stock.warehouse[w].rack[r].shelf[s].place[p1].label[1] = 0;
+            stock.warehouse[w].rack[r].shelf[s].place[p1].products = 0;
+        }
+        for (int index = stock.warehouse[w].rack[r].shelf[s].size - 1; index >= P; index--) { // index = ostatni indeks
+            TOTAL_SUM -= stock.warehouse[w].rack[r].shelf[s].place[index].products;
+        }
+        stock.warehouse[w].rack[r].shelf[s].size = P; // nowy limit
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETAS(int w, int r, int S, int P) {
+    if (P >= 0 && P < 129 && S >= 0 && S < 129 && w >= 0 && w < stock.size && r >= 0 && r < stock.warehouse[w].size) {
+        for (int s1 = stock.warehouse[w].rack[r].size; s1 < S; s1++) { // nowe polki
+            stock.warehouse[w].rack[r].shelf[s1].size = P;
+            for (int p1 = 0; p1 < P; p1++) {
+                stock.warehouse[w].rack[r].shelf[s1].place[p1].label[0] = 0;
+                stock.warehouse[w].rack[r].shelf[s1].place[p1].label[1] = 0;
+                stock.warehouse[w].rack[r].shelf[s1].place[p1].products = 0;
+            }
+        }
+        for (int s1 = 0; s1 < stock.warehouse[w].rack[r].size; s1++) { // istniejace
+            SETAP(w, r, s1, P);
+        }
+        stock.warehouse[w].rack[r].size = S;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETAR(int w, int R, int S, int P) {
+    if (P >= 0 && P < 129 && S >= 0 && S < 129 && R >= 0 && R < 129 && w >= 0 && w < stock.size) {
+        for (int r1 = stock.warehouse[w].size; r1 < R; r1++) {
+            stock.warehouse[w].rack[r1].size = S;
+            for (int s1 = 0; s1 < S; s1++) {
+                stock.warehouse[w].rack[r1].shelf[s1].size = P;
+                for (int p1 = 0; p1 < P; p1++) {
+                    stock.warehouse[w].rack[r1].shelf[s1].place[p1].label[0] = 0;
+                    stock.warehouse[w].rack[r1].shelf[s1].place[p1].label[1] = 0;
+                    stock.warehouse[w].rack[r1].shelf[s1].place[p1].products = 0;
+                }
+            }
+        }
+        for (int r1 = 0; r1 < stock.warehouse[w].size; r1++) {
+            SETAS(w, r1, S, P);
+        }
+        stock.warehouse[w].size = R;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETAW(int W, int R, int S, int P) {
+    if (P >= 0 && P < 129 && S >= 0 && S < 129 && R >= 0 && R < 129 && W >= 0 && W < 129) {
+        for (int w1 = stock.size; w1 < W; w1++) {
+            stock.warehouse[w1].size = R;
+            for (int r1 = 0; r1 < R; r1++) {
+                stock.warehouse[w1].rack[r1].size = S;
+                for (int s1 = 0; s1 < S; s1++) {
+                    stock.warehouse[s1].rack[r1].shelf[s1].size = P;
+                    for (int p1 = 0; p1 < P; p1++) {
+                        stock.warehouse[w1].rack[r1].shelf[s1].place[p1].label[0] = 0;
+                        stock.warehouse[w1].rack[r1].shelf[s1].place[p1].label[1] = 0;
+                        stock.warehouse[w1].rack[r1].shelf[s1].place[p1].products = 0;
+                    }
+                }
+            }
+        }
+        for (int w1 = 0; w1 < stock.size; w1++) {
+            SETAR(w1, R, S, P);
+        }
+        stock.size = W;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETHW(int w, int P) {
+    if (w >= 0 && w < stock.size && P >= 0 && P < 129) {
+        for (int p1 = stock.warehouse[w].warehouseShelf.size; p1 < P; p1++) {
+            stock.warehouse[w].warehouseShelf.place[p1].products = 0;
+            stock.warehouse[w].warehouseShelf.place[p1].label[0] = 0;
+            stock.warehouse[w].warehouseShelf.place[p1].label[1] = 0;
+        }
+        for (int p1 = P; p1 < stock.warehouse[w].warehouseShelf.size; p1++) {
+            TOTAL_SUM -= stock.warehouse[w].warehouseShelf.place[p1].products;
+        }
+        stock.warehouse[w].warehouseShelf.size = P;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETHR(int S, int P) {
+    if (S >= 0 && S < 129 && P >= 0 && P < 129) {
+        for (int s1 = stock.stockRack.size; s1 < S; s1++) {
+            stock.stockRack.shelf[s1].size = P;
+            for (int p1 = 0; p1 < P; p1++) {
+                stock.stockRack.shelf[s1].place[p1].products = 0;
+                stock.stockRack.shelf[s1].place[p1].label[0] = 0;
+                stock.stockRack.shelf[s1].place[p1].label[1] = 0;
+            }
+        }
+        for (int s1 = 0; s1 < stock.stockRack.size; s1++) {
+            for (int p1 = stock.stockRack.shelf[s1].size; p1 < P; p1++) { // nowe zerujemy
+                stock.stockRack.shelf[s1].place[p1].products = 0;
+                stock.stockRack.shelf[s1].place[p1].label[0] = 0;
+                stock.stockRack.shelf[s1].place[p1].label[1] = 0;
+            }
+            for (int index = stock.stockRack.shelf[s1].size - 1; index >= P; index--) { // index = ostatni indeks
+                TOTAL_SUM -= stock.stockRack.shelf[s1].place[index].products;
+            }
+        }
+        stock.stockRack.size = S;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETHS(int P) {
+    if (P >= 0 && P < 129) {
+        for (int p1 = stock.stockShelf.size; p1 < P; p1++) {
+            stock.stockShelf.place[p1].products = 0;
+            stock.stockShelf.place[p1].label[0] = 0;
+            stock.stockShelf.place[p1].label[1] = 0;
+        }
+        for (int index = stock.stockShelf.size - 1; index >= P; index--) {
+            TOTAL_SUM -= stock.stockShelf.place[index].products;
+        }
+        stock.stockShelf.size = P;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void PUTW(int w, int r, int s, int p, int A) {
+    if (w >= 0 && w < stock.size && r >= 0 && r < stock.warehouse[w].size && s >= 0 && s < stock.warehouse[w].rack[r].size && p >= 0 && p < stock.warehouse[w].rack[r].shelf[s].size && A >= 0) {
+        if (A + stock.warehouse[w].rack[r].shelf[s].place[p].products > 65535) {
+            int x = 65535 - stock.warehouse[w].rack[r].shelf[s].place[p].products;
+            TOTAL_SUM += x;
+            stock.warehouse[w].rack[r].shelf[s].place[p].products = 65535;
+        }
+        else {
+            stock.warehouse[w].rack[r].shelf[s].place[p].products += A;
+            TOTAL_SUM += A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void PUTH(int w, int p, int A) {
+    if (w >= 0 && w < stock.size && p >= 0 && p < stock.warehouse[w].warehouseShelf.size && A >= 0) {
+        if (stock.warehouse[w].warehouseShelf.place[p].products + A > 65535) {
+            int x = 65535 - stock.warehouse[w].warehouseShelf.place[p].products;
+            TOTAL_SUM += x;
+            stock.warehouse[w].warehouseShelf.place[p].products = 65535;
+        }
+        else {
+            stock.warehouse[w].warehouseShelf.place[p].products += A;
+            TOTAL_SUM += A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void PUTR(int s, int p, int A) {
+    if (s >= 0 && s < stock.stockRack.size && p >= 0 && p < stock.stockRack.shelf[s].size && A >= 0) {
+        if (stock.stockRack.shelf[s].place[p].products + A > 65535) {
+            int x = 65535 - stock.stockRack.shelf[s].place[p].products;
+            TOTAL_SUM += x;
+            stock.stockRack.shelf[s].place[p].products = 65535;
+        }
+        else {
+            stock.stockRack.shelf[s].place[p].products += A;
+            TOTAL_SUM += A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void PUTS(int p, int A) {
+    if (p >= 0 && p < stock.stockShelf.size && A >= 0) {
+        if (stock.stockShelf.place[p].products + A > 65535) {
+            int x = 65535 - stock.stockShelf.place[p].products;
+            TOTAL_SUM += x;
+            stock.stockShelf.place[p].products = 65535;
+        }
+        else {
+            stock.stockShelf.place[p].products += A;
+            TOTAL_SUM += A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void FILL(int W, int R, int S, int P, int A) {
+    if (W >= 0 && W < 129 && R >= 0 && R < 129 && S >= 0 && S < 129 && P >= 0 && P < 129 && A >= 0 && A < 65536) {
+        unsigned long long x = A;
+        TOTAL_SUM = x * R * S * P * W + x * P * W + x * P + x * P * S;
+        stock.size = W;
+        for (int w1 = 0; w1 < W; w1++) {
+            stock.warehouse[w1].size = R;
+            for (int r1 = 0; r1 < R; r1++) {
+                stock.warehouse[w1].rack[r1].size = S;
+                for (int s1 = 0; s1 < S; s1++) {
+                    stock.warehouse[w1].rack[r1].shelf[s1].size = P;
+                    for (int p1 = 0; p1 < P; p1++) {
+                        stock.warehouse[w1].rack[r1].shelf[s1].place[p1].products = A;
+                        stock.warehouse[w1].rack[r1].shelf[s1].place[p1].label[0] = 0;
+                        stock.warehouse[w1].rack[r1].shelf[s1].place[p1].label[1] = 0;
+                    }
+                }
+            }
+        }
+        stock.stockShelf.size = P;
+        for (int p1 = 0; p1 < P; p1++) {
+            stock.stockShelf.place[p1].products = A;
+            stock.stockShelf.place[p1].label[0] = 0;
+            stock.stockShelf.place[p1].label[1] = 0;
+        }
+        for (int w1 = 0; w1 < W; w1++) {
+            stock.warehouse[w1].warehouseShelf.size = P;
+            for (int p1 = 0; p1 < P; p1++) {
+                stock.warehouse[w1].warehouseShelf.place[p1].products = A;
+                stock.warehouse[w1].warehouseShelf.place[p1].label[0] = 0;
+                stock.warehouse[w1].warehouseShelf.place[p1].label[1] = 0;
+            }
+        }
+        stock.stockRack.size = S;
+        for (int s1 = 0; s1 < S; s1++) {
+            stock.stockRack.shelf[s1].size = P;
+            for (int p1 = 0; p1 < P; p1++) {
+                stock.stockRack.shelf[s1].place[p1].products = A;
+                stock.stockRack.shelf[s1].place[p1].label[0] = 0;
+                stock.stockRack.shelf[s1].place[p1].label[1] = 0;
+            }
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void POPW(int w, int r, int s, int p, int A) {
+    if (w >= 0 && w <= stock.size && r >= 0 && r < stock.warehouse[w].size && s >= 0 && s < stock.warehouse[w].rack[r].size && p >= 0 && p <= stock.warehouse[w].rack[r].shelf[s].size && A >= 0) {
+        if (stock.warehouse[w].rack[r].shelf[s].place[p].products - A < 0) {
+            TOTAL_SUM -= stock.warehouse[w].rack[r].shelf[s].place[p].products;
+            stock.warehouse[w].rack[r].shelf[s].place[p].products = 0;
+        }
+        else {
+            stock.warehouse[w].rack[r].shelf[s].place[p].products -= A;
+            TOTAL_SUM -= A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void POPH(int w, int p, int A) {
+    if (w >= 0 && w < stock.size && p >= 0 && p < stock.warehouse[w].warehouseShelf.size && A >= 0) {
+        if (stock.warehouse[w].warehouseShelf.place[p].products - A < 0) {
+            TOTAL_SUM -= stock.warehouse[w].warehouseShelf.place[p].products;
+            stock.warehouse[w].warehouseShelf.place[p].products = 0;
+        }
+        else {
+            stock.warehouse[w].warehouseShelf.place[p].products -= A;
+            TOTAL_SUM -= A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void POPR(int s, int p, int A) {
+    if (s >= 0 && s < stock.stockRack.size && p >= 0 && stock.stockRack.shelf[s].size && A >= 0) {
+        if (stock.stockRack.shelf[s].place[p].products < A) {
+            TOTAL_SUM -= stock.stockRack.shelf[s].place[p].products;
+            stock.stockRack.shelf[s].place[p].products = 0;
+        }
+        else {
+            stock.stockRack.shelf[s].place[p].products -= A;
+            TOTAL_SUM -= A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void POPS(int p, int A) {
+    if (p >= 0 && p < stock.stockShelf.size && A >= 0) {
+        if (stock.stockShelf.place[p].products - A < 0) {
+            TOTAL_SUM -= stock.stockShelf.place[p].products;
+            stock.stockShelf.place[p].products = 0;
+        }
+        else {
+            stock.stockShelf.place[p].products -= A;
+            TOTAL_SUM -= A;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void MOVW(int w1, int r1, int s1, int w2, int r2, int s2, int p, int A) {
+    if (w1 >= 0 && r1 >= 0 && s1 >= 0 && w1 >= 0 && r2 >= 0 && s2 >= 0 && p >= 0 && A >= 0 && w1 < stock.size && r1 < stock.warehouse[w1].size && s1 < stock.warehouse[w1].rack[r1].size && w2 < stock.size && r2 < stock.warehouse[w2].size && s2 < stock.warehouse[w2].rack[w2].size && p < stock.warehouse[w1].rack[r1].shelf[s1].size && p < stock.warehouse[w2].rack[r2].shelf[s2].size) {
+        if (A > stock.warehouse[w1].rack[r1].shelf[s1].place[p].products) {
+            A = stock.warehouse[w1].rack[r1].shelf[s1].place[p].products;
+        }
+        if (A > 65535 - stock.warehouse[w2].rack[r2].shelf[s2].place[p].products) {
+            A = 65535 - stock.warehouse[w2].rack[r2].shelf[s2].place[p].products;
+        }
+        stock.warehouse[w1].rack[r1].shelf[s1].place[p].products -= A;
+        stock.warehouse[w2].rack[r2].shelf[s2].place[p].products += A;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void MOVH(int w, int r, int s, int p, int A) {
+    if (w >= 0 && r >= 0 && s >= 0 && p >= 0 && A >= 0 && w < stock.size && r < stock.warehouse[w].size && s < stock.warehouse[w].rack[r].size && p < stock.warehouse[w].rack[r].shelf[s].size && p < stock.warehouse[w].warehouseShelf.size) {
+        if (A > stock.warehouse[w].rack[r].shelf[s].place[p].products) {
+            A = stock.warehouse[w].rack[r].shelf[s].place[p].products;
+        }
+        if (A > 65535 - stock.warehouse[w].warehouseShelf.place[p].products) {
+            A = 65535 - stock.warehouse[w].warehouseShelf.place[p].products;
+        }
+        stock.warehouse[w].rack[r].shelf[s].place[p].products -= A;
+        stock.warehouse[w].warehouseShelf.place[p].products += A;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void MOVR(int w, int r, int s1, int s2, int p, int A) {
+    if (w >= 0 && r >= 0 && s1 >= 0 && s2 >= 0 && p >= 0 && A >= 0 && w < stock.size && r < stock.warehouse[w].size && s1 < stock.warehouse[w].rack[r].size && s2 < stock.stockRack.size && p < stock.warehouse[w].rack[r].shelf[s1].size && p < stock.stockRack.shelf[s2].size) {
+        if (A > stock.warehouse[w].rack[r].shelf[s1].place[p].products) {
+            A = stock.warehouse[w].rack[r].shelf[s1].place[p].products;
+        }
+        if (A > 65535 - stock.stockRack.shelf[s2].place[p].products) {
+            A = 65535 - stock.stockRack.shelf[s2].place[p].products;
+        }
+        stock.warehouse[w].rack[r].shelf[s1].place[p].products -= A;
+        stock.stockRack.shelf[s2].place[p].products += A;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void MOVS(int s, int p, int A) {
+    if (s >= 0 && p >= 0 && A >= 0 && s < stock.stockRack.size && p < stock.stockRack.shelf[s].size && p < stock.stockShelf.size) {
+        if (A > stock.stockRack.shelf[s].place[p].products) {
+            A = stock.stockRack.shelf[s].place[p].products;
+        }
+        if (A > 65535 - stock.stockShelf.place[p].products) {
+            A = 65535 - stock.stockShelf.place[p].products;
+        }
+        stock.stockRack.shelf[s].place[p].products -= A;
+        stock.stockShelf.place[p].products += A;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETW(int w) {
+    if (w >= 0 && w < stock.size) {
+        for (int r1 = 0; r1 < stock.warehouse[w].size; r1++) {
+            for (int s1 = 0; s1 < stock.warehouse[w].rack[r1].size; s1++) {
+                for (int p1 = 0; p1 < stock.warehouse[w].rack[r1].shelf[s1].size; p1++) {
+                    sum += stock.warehouse[w].rack[r1].shelf[s1].place[p1].products;
+                }
+            }
+        }
+        /* for (int p1 = 0; p1 < stock.stockShelf.size; p1++) {
+             sum += stock.stockShelf.place[p1].products;
+         }*/
+        for (int p1 = 0; p1 < stock.warehouse[w].warehouseShelf.size; p1++) {
+            sum += stock.warehouse[w].warehouseShelf.place[p1].products;
+        }
+        /*for (int s1 = 0; s1 < stock.stockRack.size; s1++) {
+            for (int p1 = 0; p1 < stock.stockRack.shelf[s1].size; p1++) {
+                sum += stock.stockRack.shelf[s1].place[p1].products;
+            }
+        }*/
+        cout << sum << endl;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETRW(int w, int r) {
+    if (w >= 0 && w < stock.size && r >= 0 && r < stock.warehouse[w].size) {
+        for (int s1 = 0; s1 < stock.warehouse[w].rack[r].size; s1++) {
+            for (int p1 = 0; p1 < stock.warehouse[w].rack[r].shelf[s1].size; p1++) {
+                sum += stock.warehouse[w].rack[r].shelf[s1].place[p1].products;
+            }
+        }
+        cout << sum << endl;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETRH() {
+    for (int s1 = 0; s1 < stock.stockRack.size; s1++) {
+        for (int p1 = 0; p1 < stock.stockRack.shelf[s1].size; p1++) {
+            sum += stock.stockRack.shelf[s1].place[p1].products;
+        }
+    }
+    cout << sum << endl;
+}
+
+void GETSW(int w, int r, int s) {
+    if (w >= 0 && r >= 0 && s >= 0 && w < stock.size && r < stock.warehouse[w].size && s < stock.warehouse[w].rack[r].size) {
+        for (int p1 = 0; p1 < stock.warehouse[w].rack[r].shelf[s].size; p1++) {
+            sum += stock.warehouse[w].rack[r].shelf[s].place[p1].products;
+        }
+        cout << sum << endl;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETSH(int w) {
+    if (w >= 0 && w < stock.size) {
+        for (int p1 = 0; p1 < stock.warehouse[w].warehouseShelf.size; p1++) {
+            sum += stock.warehouse[w].warehouseShelf.place[p1].products;
+        }
+        cout << sum << endl;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETSR(int s) {
+    if (s >= 0 && s < stock.stockRack.size) {
+        for (int p1 = 0; p1 < stock.stockRack.shelf[s].size; p1++) {
+            sum += stock.stockRack.shelf[s].place[p1].products;
+        }
+        cout << sum << endl;
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETS() {
+    for (int p1 = 0; p1 < stock.stockShelf.size; p1++) {
+        sum += stock.stockShelf.place[p1].products;
+    }
+    cout << sum << endl;
+}
+
+void SETLW(int w, int r, int s, int p, char dd[2]) {
+    if (w >= 0 && r >= 0 && s >= 0 && p >= 0 && w < stock.size && r < stock.warehouse[w].size && s < stock.warehouse[w].rack[r].size && p < stock.warehouse[w].rack[r].shelf[s].size) {
+        stock.warehouse[w].rack[r].shelf[s].place[p].label[0] = dd[0];
+        stock.warehouse[w].rack[r].shelf[s].place[p].label[1] = dd[1];
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETLH(int w, int p, char dd[2]) {
+    if (w >= 0 && p >= 0 && w < stock.size && p < stock.warehouse[w].warehouseShelf.size) {
+        stock.warehouse[w].warehouseShelf.place[p].label[0] = dd[0];
+        stock.warehouse[w].warehouseShelf.place[p].label[1] = dd[1];
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETLR(int s, int p, char dd[2]) {
+    if (s >= 0 && p >= 0 && s < stock.stockRack.size && p < stock.stockRack.shelf[s].size) {
+        stock.stockRack.shelf[s].place[p].label[0] = dd[0];
+        stock.stockRack.shelf[s].place[p].label[1] = dd[1];
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void SETLS(int p, char dd[2]) {
+    if (p >= 0 && p < stock.stockShelf.size) {
+        stock.stockShelf.place[p].label[0] = dd[0];
+        stock.stockShelf.place[p].label[1] = dd[1];
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETLW(int w, int r, int s, int p) {
+    if (w >= 0 && r >= 0 && s >= 0 && p >= 0 && w < stock.size && r < stock.warehouse[w].size && s < stock.warehouse[w].rack[r].size && p < stock.warehouse[w].rack[r].shelf[s].size) {
+        if (stock.warehouse[w].rack[r].shelf[s].place[p].label[0] == 0 || stock.warehouse[w].rack[r].shelf[s].place[p].label[1] == 0) {
+            cout << "--" << endl;
+        }
+        else {
+            cout << stock.warehouse[w].rack[r].shelf[s].place[p].label[0] << stock.warehouse[w].rack[r].shelf[s].place[p].label[1] << endl;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETLH(int w, int p) {
+    if (w >= 0 && p >= 0 && w < stock.size && p < stock.warehouse[w].warehouseShelf.size) {
+        if (stock.warehouse[w].warehouseShelf.place[p].label[0] == 0 || stock.warehouse[w].warehouseShelf.place[p].label[1] == 0) {
+            cout << "--" << endl;
+        }
+        else {
+            cout << stock.warehouse[w].warehouseShelf.place[p].label[0] << stock.warehouse[w].warehouseShelf.place[p].label[1] << endl;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETLR(int s, int p) {
+    if (s >= 0 && p >= 0 && s < stock.stockRack.size && p < stock.stockRack.shelf[s].size) {
+        if (stock.stockRack.shelf[s].place[p].label[0] == 0 || stock.stockRack.shelf[s].place[p].label[1] == 0) {
+            cout << "--" << endl;
+        }
+        else {
+            cout << stock.stockRack.shelf[s].place[p].label[0] << stock.stockRack.shelf[s].place[p].label[1] << endl;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+void GETLS(int p) {
+    if (p >= 0 && p < stock.stockShelf.size) {
+        if (stock.stockShelf.place[p].label[0] == 0 || stock.stockShelf.place[p].label[1] == 0) {
+            cout << "--" << endl;
+        }
+        else {
+            cout << stock.stockShelf.place[p].label[0] << stock.stockShelf.place[p].label[1] << endl;
+        }
+    }
+    else {
+        cout << "error" << endl;
+    }
+}
+
+int main() {
+    char command[10];
+    cin >> command;
+    while (!(command[0] == 'E' && command[1] == 'N' && command[2] == 'D')) {
+        if (command[0] == 'S' && command[1] == 'E' && command[2] == 'T' && command[3] == '-') {
+            if (command[4] == 'A') {
+                int w, r, s, p;
+                cin >> w >> r >> s >> p;
+                if (command[5] == 'P') {
+                    if (w >= 0 && w < 128 && r >= 0 && r < 128 && s >= 0 && s < 128 && p >= 0 && p < 129) {
+                        SETAP(w, r, s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'S') {
+                    if (w >= 0 && w < 128 && r >= 0 && r < 128 && s >= 0 && s < 129 && p >= 0 && p < 129) {
+                        SETAS(w, r, s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'R') {
+                    if (w >= 0 && w < 128 && r >= 0 && r < 129 && s >= 0 && s < 129 && p >= 0 && p < 129) {
+                        SETAR(w, r, s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'W') {
+                    if (w >= 0 && w < 129 && r >= 0 && r < 129 && s >= 0 && s < 129 && p >= 0 && p < 129) {
+                        SETAW(w, r, s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+            }
+            else if (command[4] == 'H') {
+                int w, s, p;
+                if (command[5] == 'W') {
+                    cin >> w >> p;
+                    if (w >= 0 && w < 128 && p >= 0 && p < 129) {
+                        SETHW(w, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'R') {
+                    cin >> s >> p;
+                    if (s >= 0 && s < 129 && p >= 0 && p < 129) {
+                        SETHR(s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'S') {
+                    cin >> p;
+                    if (p >= 0 && p < 129) {
+                        SETHS(p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+            }
+            else if (command[4] == 'L') {
+                char dd[2];
+                int w, r, s, p;
+                if (command[5] == 'W') {
+                    cin >> w >> r >> s >> p >> dd;
+                    if (w >= 0 && w < 128 && r >= 0 && r < 128 && s >= 0 && s < 128 && p >= 0 && p < 128) {
+                        SETLW(w, r, s, p, dd);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'H') {
+                    cin >> w >> p >> dd;
+                    if (w >= 0 && w < 128 && p >= 0 && p < 128) {
+                        SETLH(w, p, dd);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'R') {
+                    cin >> s >> p >> dd;
+                    if (s >= 0 && s < 128 && p >= 0 && p < 128) {
+                        SETLR(s, p, dd);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'S') {
+                    cin >> p >> dd;
+                    if (p >= 0 && p < 128) {
+                        SETLS(p, dd);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+            }
+
+        }
+        else if (command[0] == 'P' && command[1] == 'U' && command[2] == 'T' && command[3] == '-') {
+            int w, r, s, p, A;
+            if (command[4] == 'W') {
+                cin >> w >> r >> s >> p >> A;
+                if (w >= 0 && w < 128 && p >= 0 && p < 128 && r >= 0 && r < 128 && s >= 0 && s < 128 && A >= 0) {
+                    PUTW(w, r, s, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'H') {
+                cin >> w >> p >> A;
+                if (w >= 0 && w < 128 && p >= 0 && p < 128 && A >= 0) {
+                    PUTH(w, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'R') {
+                cin >> s >> p >> A;
+                if (s >= 0 && s < 128 && p >= 0 && p < 128 && A >= 0) {
+                    PUTR(s, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'S') {
+                cin >> p >> A;
+                if (p >= 0 && p < 128 && A >= 0) {
+                    PUTS(p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+        }
+        else if (command[0] == 'F' && command[1] == 'I' && command[2] == 'L' && command[3] == 'L') {
+            int W, R, S, P, A;
+            cin >> W >> R >> S >> P >> A;
+            if (W >= 0 && R >= 0 && S >= 0 && P >= 0 && A >= 0) {
+                FILL(W, R, S, P, A);
+            }
+            else {
+                cout << "error" << endl;
+            }
+        }
+        else if (command[0] == 'P' && command[1] == 'O' && command[2] == 'P' && command[3] == '-') {
+            int w, r, s, p, A;
+            if (command[4] == 'W') {
+                cin >> w >> r >> s >> p >> A;
+                if (w >= 0 && w < 128 && p >= 0 && p < 128 && r >= 0 && r < 128 && s >= 0 && s < 128 && A >= 0) {
+                    POPW(w, r, s, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'H') {
+                cin >> w >> p >> A;
+                if (w >= 0 && w < 128 && p >= 0 && p < 128 && A >= 0) {
+                    POPH(w, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'R') {
+                cin >> s >> p >> A;
+                if (s >= 0 && s < 128 && p >= 0 && p < 128 && A >= 0) {
+                    POPR(s, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'S') {
+                cin >> p >> A;
+                if (p >= 0 && p < 128 && A >= 0) {
+                    POPS(p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+        }
+        else if (command[0] == 'M' && command[1] == 'O' && command[2] == 'V' && command[3] == '-') {
+            int w1, r1, s1, w2, r2, s2, p, A;
+            if (command[4] == 'W') {
+                cin >> w1 >> r1 >> s1 >> w2 >> r2 >> s2 >> p >> A;
+                if (w1 >= 0 && r1 >= 0 && s1 >= 0 && p >= 0 && w2 >= 0 && r2 >= 0 && s2 >= 0 && A >= 0 && w1 < 128 && r1 < 128 && s1 < 128 && w2 < 128 && r2 < 128 && s2 < 128 && p < 128) {
+                    MOVW(w1, r1, s1, w2, r2, s2, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'H') {
+                cin >> w1 >> r1 >> s1 >> p >> A;
+                if (w1 >= 0 && r1 >= 0 && s1 >= 0 && p >= 0 && A >= 0 && w1 < 128 && r1 < 128 && s1 < 128 && p < 128) {
+                    MOVH(w1, r1, s1, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'R') {
+                cin >> w1 >> r1 >> s1 >> s2 >> p >> A;
+                if (w1 >= 0 && r1 >= 0 && s1 >= 0 && s2 >= 0 && p >= 0 && A >= 0 && w1 < 128 && r1 < 128 && s1 < 128 && s2 < 128 && p < 128) {
+                    MOVR(w1, r1, s1, s2, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'S') {
+                cin >> s1 >> p >> A;
+                if (s1 >= 0 && p >= 0 && A >= 0 && s1 < 128 && p < 128) {
+                    MOVS(s1, p, A);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+        }
+        else if (command[0] == 'G' && command[1] == 'E' && command[2] == 'T' && command[3] == '-') {
+            int w, r, s;
+            sum = 0;
+            if (command[4] == 'E') {
+                cout << TOTAL_SUM << endl;
+            }
+            else if (command[4] == 'W') {
+                cin >> w;
+                if (w >= 0 && w < 128) {
+                    GETW(w);
+                }
+                else {
+                    cout << "error" << endl;
+                }
+            }
+            else if (command[4] == 'R') {
+                if (command[5] == 'W') {
+                    cin >> w >> r;
+                    if (w >= 0 && r >= 0 && w < 128 && r < 128) {
+                        GETRW(w, r);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'H') {
+                    GETRH();
+                }
+            }
+            else if (command[4] == 'S') {
+                if (command[5] == 'W') {
+                    cin >> w >> r >> s;
+                    if (w >= 0 && r >= 0 && w < 128 && r < 128 && s >= 0 && s < 128) {
+                        GETSW(w, r, s);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'H') {
+                    cin >> w;
+                    if (w >= 0 && w < 128) {
+                        GETSH(w);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'R') {
+                    cin >> s;
+                    if (s >= 0 && s < 128) {
+                        GETSR(s);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 0) {
+                    GETS();
+                }
+            }
+            else if (command[4] == 'L') {
+                int w, r, s, p;
+                if (command[5] == 'W') {
+                    cin >> w >> r >> s >> p;
+                    if (w >= 0 && r >= 0 && w < 128 && r < 128 && s >= 0 && p >= 0 && s < 128 && p < 128) {
+                        GETLW(w, r, s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'H') {
+                    cin >> w >> p;
+                    if (w >= 0 && p >= 0 && w < 128 && p < 128) {
+                        GETLH(w, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'R') {
+                    cin >> s >> p;
+                    if (s >= 0 && p >= 0 && s < 128 && p < 128) {
+                        GETLR(s, p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+                else if (command[5] == 'S') {
+                    cin >> p;
+                    if (p >= 0 && p < 128) {
+                        GETLS(p);
+                    }
+                    else {
+                        cout << "error" << endl;
+                    }
+                }
+            }
+        }
+        cin >> command;
+    }
+}
