@@ -1,0 +1,382 @@
+// Kacper Mycka
+
+using namespace std;
+
+void Cardinality(int arrcar[], int* arrpwr) {
+    int power = 0;
+    while (arrcar[power] != -1) {
+        power++;
+    }
+    *arrpwr = power;
+}
+
+void Add(int addnum, int arradd[]) {
+    int addpwr = 0;
+    int torf = 1;
+    if (addnum >= 1 && addnum <= 4095) {
+        while (arradd[addpwr] != -1) {
+            if (arradd[addpwr] == addnum) {
+                torf = 0;
+            }
+            addpwr++;
+        }
+        if (torf == 1) {
+            arradd[addpwr] = addnum;
+            arradd[addpwr + 1] = -1;
+        }
+    }
+
+    // sortowanie
+    int turnsnum;
+    int turnsnum2;
+    if (torf == 1) {
+        turnsnum2 = addpwr;
+    }
+    else {
+        turnsnum2 = addpwr - 1;
+    }
+    int addhelp;
+
+    while (turnsnum2--) {
+        if (torf == 1) {
+            turnsnum = addpwr;
+        }
+        else {
+            turnsnum = addpwr - 1;
+        }
+        while (turnsnum > 0) {
+            if (arradd[turnsnum] < arradd[turnsnum - 1]) {
+                addhelp = arradd[turnsnum];
+                arradd[turnsnum] = arradd[turnsnum - 1];
+                arradd[turnsnum - 1] = addhelp;
+            }
+            turnsnum--;
+        }
+    }
+}
+
+bool Subset(int arr1[], int arr2[]) {
+    int pwr1 = 0;
+    int helper = 0;
+    while (arr1[pwr1] != -1) {
+        pwr1++;
+    }
+    int pwr2 = 0;
+    while (arr2[pwr2] != -1) {
+        pwr2++;
+    }
+    if (pwr1 <= pwr2) {
+        pwr1--;
+        int x = pwr2;
+        pwr2--;
+        while (pwr1 >= 0) {
+            while (arr1[pwr1] != arr2[pwr2]) {
+                if (arr1[pwr1] == arr2[pwr2]) {
+                    helper += 1;
+                    //break
+                }
+                else {
+                    pwr2--;
+                    if (pwr2 < 0) {
+                        return false;
+                    }
+                }
+            }
+            pwr2 = x - 1;
+            pwr1--;
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool Empty(int arr[]) {
+    if (arr[0] != -1) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+bool Nonempty(int arr[]) {
+    if (arr[0] != -1) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool Equal(int arr1[], int arr2[]) {
+    if (Subset(arr1,arr2) && Subset(arr2,arr1)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+void MinMax(int arr[],int *arrmin,int &arrmax) {
+    int pwr = 0;
+    int min;
+    int max;
+    int donothing = 0;
+    if (arr[0] == -1) {
+        donothing = 1;
+    }
+    while (arr[pwr] != -1) {
+        pwr++;
+    }
+    pwr -= 1;
+    min = arr[pwr];
+    max = arr[pwr];
+    while (pwr >= 0) {
+        if (arr[pwr] < min) {
+            min = arr[pwr];
+        }
+        if (arr[pwr] > max) {
+            max = arr[pwr];
+        };
+        pwr--;
+    }
+    if (donothing == 0) {
+        arrmax = max;
+        *arrmin = min;
+    }
+}
+
+bool Element(int check, int arr[]) {
+    int pwr = 0;
+    while (arr[pwr] != -1) {
+        pwr++;
+    }
+    pwr -= 1;
+    while (pwr >= 0) {
+        if (check == arr[pwr]) {
+            return 1;
+        }
+        pwr--;
+    }
+    return 0;
+}
+
+double Arithmetic(int arr[]) {
+    if (arr[0] == -1) {
+        return 0;
+    }
+    else {
+        int pwr = 0;
+        while (arr[pwr] != -1) {
+            pwr++;
+        }
+        double second = pwr;
+        double sum = 0;
+        while (pwr--) {
+            sum += arr[pwr];
+        }
+        //sum += arr[pwr];
+        return sum / second;
+    }
+}
+
+double Harmonic(int arr[]) {
+    if (arr[0] == -1) {
+        return 1;
+    }
+    else {
+        int pwr = 0;
+        while (arr[pwr] != -1) {
+            pwr++;
+        }
+        double second = pwr;
+        double sum = 0;
+        while (pwr--) {
+            if (arr[pwr] != 0) {
+                sum += 1/double((arr[pwr]));
+            }
+        }
+        //sum += arr[pwr];
+        return second / sum;
+    }
+}
+
+void Union(int arr1[], int arr2[], int arr3[]) {
+    int place = 0;
+    int placene = 0;
+    while (arr1[place] != -1) {
+        if (Element(arr1[place],arr2) == false) {
+            arr3[placene] = arr1[place];
+            placene++;
+        }
+        place++;
+    }
+    place = 0;
+    while (arr2[place] != -1) {
+        arr3[placene] = arr2[place];
+        placene++;
+        place++;
+    }
+    arr3[placene] = -1;
+
+    int turnsnum2 = placene-1; //x - moc zbioru, x-1 - indeks ostatniego elementu zbioru
+    int whilehelp;
+    int turnsnum;
+    int helper;
+
+    while (turnsnum2 > 0) {
+        //cout << turnsnum2 << " " << turnsnum;
+        turnsnum = placene - 1; //indeks ostatniego elementu zbioru
+        whilehelp = turnsnum2;
+        while (whilehelp > 0) {
+            if (arr3[turnsnum] < arr3[turnsnum - 1]) {
+                helper = arr3[turnsnum];
+                arr3[turnsnum] = arr3[turnsnum - 1];
+                arr3[turnsnum - 1] = helper;
+            }
+            whilehelp--;
+            turnsnum--;
+        }
+        turnsnum2--;
+    }
+}
+
+void Intersection(int arr1[], int arr2[], int result[]) {
+    int place = 0;
+    int resplace = 0;
+    while (arr1[place] != -1) {
+        if (Element(arr1[place],arr2)) {
+            result[resplace] = arr1[place];
+            resplace++;
+        }
+        place++;
+    }
+    result[resplace] = -1;
+}
+
+void Difference(int arr1[], int arr2[], int result[]) {
+    int place = 0;
+    int resplace = 0;
+    while (arr1[place] != -1) {
+        if (Element(arr1[place],arr2) == 0) {
+            result[resplace] = arr1[place];
+            resplace++;
+        }
+        place++;
+    }
+    result[resplace] = -1;
+}
+
+void Symmetric(int arr1[], int arr2[], int result[]) {
+    int place = 0;
+    int resplace = 0;
+    while (arr1[place] != -1) {
+        if (Element(arr1[place],arr2) == 0) {
+            result[resplace] = arr1[place];
+            resplace++;
+        }
+        place++;
+    }
+    int place2 = 0;
+    //int power = 0;
+    while (arr2[place2] != -1) {
+        if (Element(arr2[place2],arr1) == 0) {
+            result[resplace] = arr2[place2];
+            resplace++;
+            //power++;
+        }
+        place2++;
+    }
+    result[resplace] = -1;
+
+    int turnsnum2 = resplace-1; //x - moc zbioru, x-1 - indeks ostatniego elementu zbioru
+    int whilehelp;
+    int turnsnum;
+    int helper;
+
+    while (turnsnum2 > 0) {
+        //cout << turnsnum2 << " " << turnsnum;
+        turnsnum = resplace - 1; //indeks ostatniego elementu zbioru
+        whilehelp = turnsnum2;
+        while (whilehelp > 0) {
+            if (result[turnsnum] < result[turnsnum - 1]) {
+                helper = result[turnsnum];
+                result[turnsnum] = result[turnsnum - 1];
+                result[turnsnum - 1] = helper;
+            }
+            whilehelp--;
+            turnsnum--;
+        }
+        turnsnum2--;
+    }
+}
+
+void Complement(int arr1[], int arr2[]) {
+    int num = 1;
+    int place = 0;
+    while (num >= 1 && num <= 4095) {
+        if (Element(num,arr1) == false) {
+            arr2[place] = num;
+            place++;
+        }
+        num++;
+    }
+    arr2[place] = -1;
+}
+
+void Properties(int arr[], char signs[], double &arithmetic, double *harmonic, int &min, int *max, int &power2) {
+    int a = 0;
+    while (signs[a] != 0) {
+        if (signs[a] == 'a') {
+            arithmetic = Arithmetic(arr);
+        }
+        else if (signs[a] == 'h') {
+            *harmonic = Harmonic(arr);
+        }
+        else if (signs[a] == 'm') {
+            MinMax(arr, &min, *max);
+        }
+        else if (signs[a] == 'c') {
+            Cardinality(arr,&power2);
+        }
+        a++;
+    }
+}
+
+void Create(int element, int source[], int created[]) {
+    int x = 0;
+    int a = 0;
+    created[0] = -1;
+    while (x < element) {
+        if (source[x] >= 1 && source[x] <= 4095 && Element(source[x],created) == false) {
+            created[a] = source[x];
+            created[a+1] = -1;
+            a++;
+        }
+        x++;
+    }
+
+
+    int turnsnum2 = a-1; //x - moc zbioru, x-1 - indeks ostatniego elementu zbioru
+    int whilehelp;
+    int turnsnum;
+    int helper;
+
+    while (turnsnum2 > 0) {
+        //cout << turnsnum2 << " " << turnsnum;
+        turnsnum = a - 1; //indeks ostatniego elementu zbioru
+        whilehelp = turnsnum2;
+        while (whilehelp > 0) {
+            if (created[turnsnum] < created[turnsnum - 1]) {
+                helper = created[turnsnum];
+                created[turnsnum] = created[turnsnum - 1];
+                created[turnsnum - 1] = helper;
+            }
+            whilehelp--;
+            turnsnum--;
+        }
+        turnsnum2--;
+    }
+}
