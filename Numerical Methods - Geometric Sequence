@@ -1,0 +1,54 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+
+using namespace std;
+
+int main() {
+    int N;
+    cin >> N;
+
+    for (int i = 0; i < N; ++i) {
+        float P, S;
+        cin >> P >> S;
+        if (P == 0 || S == 0) {
+            cout << scientific << setprecision(10) << 0.0f << " " << 0.0f << " " << 0.0f << endl;
+        }
+        else {
+            float sqrP = pow(abs(P), 1.0/3) * (P >= 0 ? 1 : -1);
+            float delta = pow((1 - S / sqrP),2) - 4;
+
+
+            if (delta < 0) {
+                cout << scientific << setprecision(10) << 0.0f << " " << 0.0f << " " << 0.0f << endl;
+            }
+            else if (delta > 0) {
+                float q1 = (- (1 - S / sqrP) - sqrt(delta)) / 2;
+                float q2 = (- (1 - S / sqrP) + sqrt(delta)) / 2;
+                float x1, x3;
+                bool validate = abs(S - sqrP / q1 - sqrP * q1 - sqrP) <= abs(S - sqrP / q2 - sqrP - sqrP * q2);
+                if (q2 == 0 || validate) {
+                    x1 = sqrP / q1;
+                    x3 = sqrP * q1;
+                }
+                else {
+                    x1 = sqrP / q2;
+                    x3 = sqrP * q2;
+                }
+
+                if (x1 < x3) {
+                    float help = x1;
+                    x1 = x3;
+                    x3 = help;
+                }
+                
+                cout << scientific << setprecision(10) << x1 << " " << sqrP << " " << x3 << endl;
+            }
+            else {
+                float q = - (sqrP - S) / (2 * sqrP);
+                cout << scientific << setprecision(10) << sqrP / q << " " << sqrP << " " << sqrP * q << endl;
+            }
+        }
+    }
+    return 0;
+}
