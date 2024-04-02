@@ -1,1 +1,1 @@
-Numerical Methods - Geometric Sequence
+#Numerical Methods - Geometric Sequence
